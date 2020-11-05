@@ -1,0 +1,31 @@
+{{ define "content" }}
+<table class="table table-sm table-bordered table-striped table-hover">
+  <caption>{{ .Type }}</caption>
+  <thead class="thead-dark">
+    <tr>
+      <th>敌人ID</th>
+      <th>敌人名称</th>
+      <th>模型类别</th>
+      <th>等级</th>
+      <th>偷窃</th>
+      <th>掉落</th>
+      <th>战斗类别</th>
+      <th>武功</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range .InfoList }}
+    <tr>
+      <td>{{ .Id }}</td>
+      <td>{{ .Name }}</td>
+      <td>{{ .ModelType }}</td>
+      <td>{{ .Level }}</td>
+      <td>{{ .StolenSum }}</td>
+      <td>{{ .DropInfo }}</td>
+      <td>{{ .FightType }}</td>
+      <td>{{ .Fighters }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

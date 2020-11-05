@@ -1,0 +1,40 @@
+{{ define "content" }}
+<h3>持仓股票总成本：{{ .Costs }}，为负正常，为正说明已通过交易获利</h3>
+<table class="table table-sm table-bordered table-striped table-hover">
+  <caption>持仓股票分析</caption>
+  <thead class="thead-dark">
+    <tr>
+      <th>代码</th>
+      <th>名称</th>
+      <th>首次交易</th>
+      <th>最近交易</th>
+      <th>持股天数</th>
+      <th>当前量</th>
+      <th>总成本</th>
+      <th>每股成本</th>
+      <th>最高量</th>
+      <th>最高量日期</th>
+      <th>总买卖次数</th>
+      <th>周买卖频率</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range .HoldList }}
+    <tr>
+      <td>{{ .Code }}</td>
+      <td>{{ .Name }}</td>
+      <td>{{ .FirstDealDay | fdate }}</td>
+      <td>{{ .LastDealDay | fdate }}</td>
+      <td>{{ .HoldDays }}</td>
+      <td>{{ .Balance }}</td>
+      <td>{{ .Amount }}</td>
+      <td>{{ .AvgCost | printf "%.3f"  }}</td>
+      <td>{{ .MaxBalance }}</td>
+      <td>{{ .MaxBalanceDay | fdate }}</td>
+      <td>{{ .TransactionCount }}</td>
+      <td>{{ .TransactionFreq | printf "%.3f" }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

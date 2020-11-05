@@ -1,0 +1,19 @@
+{{ define "content" }}
+<table class="table table-sm table-bordered table-striped table-hover">
+  <caption>全部任务</caption>
+  <thead class="thead-dark">
+    <tr>
+      <th>编号</th>
+      <th>内容</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr>
+      <td>{{ .Id }}</td>
+      <td>{{ .Content }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

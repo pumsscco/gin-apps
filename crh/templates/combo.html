@@ -1,0 +1,26 @@
+{{ define "content" }}
+<table class="table table-sm table-bordered table-striped table-hover">
+  <caption>组合技</caption>
+  <thead class="thead-dark">
+    <tr>
+      <th>组合技</th>
+      <th>武功1</th>
+      <th>武功1修为</th>
+      <th>武功2</th>
+      <th>武功2修为</th>
+      <th>修炼角色</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+      <td>{{ .Name }}</td>
+      <td>{{ .Fighter1Name }}</td>
+      <td>{{ .Fighter1Lvl }}</td>
+      <td>{{ .Fighter2Name }}</td>
+      <td>{{ .Fighter2Lvl }}</td>
+      <td>{{ .Role }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

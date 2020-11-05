@@ -1,0 +1,60 @@
+{{ define "content" }}
+{{ $isNei:=.IsNei }}
+{{ $isWai:=.IsWai }}
+<table class="table table-bordered table-striped table-hover">
+  <thead class="thead-dark">
+    <tr>
+      <th>ID</th>
+      <th>名称</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ .Id }}</td>
+      <td>{{ .Name }}</td>
+      <td>{{ .Description }}</td>
+    </tr>
+  </tbody>
+</table>
+<table class="table table-bordered table-striped table-hover">
+  <thead class="thead-dark">
+    <tr>
+      <th>等级</th>
+      <th>修炼要求</th>
+      {{ if $isNei }}
+      <th>调用函数</th>
+      <th>参数</th>
+      {{ end }}
+      {{ if $isWai }}
+      <th>附加效果机率</th>
+      <th>基础效果值</th>
+      <th>作用范围</th>
+      <th>段数</th>
+      <th>内力消耗</th>
+      <th>动画ID</th>
+      {{ end }}
+    </tr>
+  </thead>
+  <tbody>
+    {{ range .FighterLevels }}
+    <tr>
+      <td>{{ .Lvl }}</td>
+      <td>{{ .Need }}</td>
+      {{ if $isNei }}
+      <td>{{ .Func }}</td>
+      <td>{{ .Params }}</td>
+      {{ end }}
+      {{ if $isWai }}
+      <td>{{ .AdditionRate }}</td>
+      <td>{{ .BaseEffect }}</td>
+      <td>{{ .RangeName }}</td>
+      <td>{{ .Times }}</td>
+      <td>{{ .MPConsume }}</td>
+      <td>{{ .AnimId }}</td>
+      {{ end }}
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

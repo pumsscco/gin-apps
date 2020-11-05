@@ -1,0 +1,34 @@
+body {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+caption {
+  caption-side: top;
+  text-align: center;
+}
+.dropdown:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-item:hover>.dropdown-menu {
+  display: block;
+}
+html {
+  font-size: 10px;
+}
+/*
+.water {
+  color: blue;
+}
+.fire {
+  color: red;
+}
+.thunder {
+  color: purple;
+}
+.air {
+  color: green;
+}
+.earth {
+  color: chocolate;
+}
+*/

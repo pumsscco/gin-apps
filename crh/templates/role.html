@@ -1,0 +1,24 @@
+{{ define "content" }}
+<table class="table table-sm table-bordered table-striped table-hover">
+  <caption>角色初始数据</caption>
+  <thead class="thead-dark">
+    <tr>
+      <th>ID</th>
+      <th>名称</th>
+      <th>模型编号</th>
+      <th>自带物品</th>
+      <th>武功修为</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+      <td>{{ .Id }}</td>
+      <td>{{ .Name }}</td>
+      <td>{{ .Model }}</td>
+      <td>{{ .Own }}</td>
+      <td>{{ .Fighters }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

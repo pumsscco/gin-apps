@@ -1,0 +1,38 @@
+{{ define "content" }}
+<h3>已清仓股票总收益：{{ .Profits }}，下表为各股票明细</h3>
+<table class="table table-bordered table-striped table-hover">
+  <caption>清仓股票收益分析</caption>
+  <thead class="thead-dark">
+    <tr>
+      <th>代码</th>
+      <th>名称</th>
+      <th>首次交易</th>
+      <th>最后交易</th>
+      <th>持股天数</th>
+      <th>净利润</th>
+      <th>日均利润</th>
+      <th>最高持仓量</th>
+      <th>最高持仓日期</th>
+      <th>买卖次数</th>
+      <th>周买卖频率</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range .ClearList }}
+    <tr>
+      <td>{{ .Code }}</td>
+      <td>{{ .Name }}</td>
+      <td>{{ .FirstDealDay | fdate }}</td>
+      <td>{{ .LastDealDay | fdate  }}</td>
+      <td>{{ .HoldDays }}</td>
+      <td>{{ .Amount }}</td>
+      <td>{{ .AvgDailyProfit | printf "%.3f" }}</td>
+      <td>{{ .MaxBalance }}</td>
+      <td>{{ .MaxBalanceDay | fdate }}</td>
+      <td>{{ .TransactionCount }}</td>
+      <td>{{ .TransactionFreq | printf "%.3f" }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

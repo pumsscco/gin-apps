@@ -1,0 +1,64 @@
+{{ define "content" }}
+{{ $isEquip:=.IsEquip }}
+{{ $hasEff:=.HasEff }}
+{{ $isKungfu:=.IsKungfu }}
+{{ $onlyPrice:=.OnlyPrice }}
+{{ $isFood:=.IsFood }}
+<table class="table table-bordered table-striped table-hover">
+  <caption>{{ .Type }}</caption>
+  <thead class="thead-dark">
+    <tr>
+      <th>ID</th>
+      <th>名称</th>
+      <th>说明</th>
+      {{ if $isEquip }}
+      <th>属性</th>
+      <th>价格</th>
+      <th>可用角色</th>
+      {{ end }}
+      {{ if $hasEff }}
+      <th>调用函数</th>
+      <th>调用参数</th>
+      {{ end }}      
+      {{ if $isKungfu }}
+      <th>属性要求</th>
+      <th>可修炼角色</th>
+      {{ end }}
+      {{ if $onlyPrice }}
+      <th>价格</th>
+      {{ end }}
+      {{ if $isFood }}
+      <th>属性</th>
+      {{ end }}
+    </tr>
+  </thead>
+  <tbody>
+    {{ range .ItemList }}
+    <tr>
+      <td>{{ .Id }}</td>
+      <td>{{ .Name }}</td>
+      <td>{{ .Description }}</td>
+      {{ if $isEquip }}
+      <td>{{ .Attribute }}</td>
+      <td>{{ .Price }}</td>
+      <td>{{ .ValidRoles }}</td>
+      {{ end }}
+      {{ if $hasEff }}
+      <td>{{ .Func }}</td>
+      <td>{{ .FuncParam }}</td>
+      {{ end }}
+      {{ if $isKungfu }}
+      <td>{{ .Attribute }}</td>
+      <td>{{ .ValidRoles }}</td>
+      {{ end }}
+      {{ if $onlyPrice }}
+      <td>{{ .Price }}</td>
+      {{ end }}
+      {{ if $isFood }}
+      <td>{{ .Attribute }}</td>
+      {{ end }}
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

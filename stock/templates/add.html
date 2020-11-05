@@ -1,0 +1,69 @@
+{{ define "content" }}
+<h3 >新增单条记录表单</h3>
+<h5>这里尽管进行了比较严格的数据校验，但仍无法做到100%拒绝脏数据，请特别小心输入，并且要注意佣金、印花税、过户费等相关费率的变化</h5>
+<form action="/add" method="post">
+  <div class="form-row">
+    <div class="form-group col-md-3">
+      <label for="date">成交日期</label>
+      <input id="date" type="date" min="2007-10-24" name="date" class="form-control form-control-lg" required autofocus>
+    </div>
+    <div class="form-group col-md-3">
+      <label for="code">股票代码</label>
+      <input id="code" type="text" maxlength=6 pattern="^(6|0|3)[0-9]{5}" name="code" class="form-control form-control-lg" aria-describedby="codeHelp" required>
+      <small id="codeHelp" class="form-text text-muted">6/0/3开头的6位数字</small>
+    </div>
+    <div class="form-group col-md-3">
+      <label for="name">股票名称</label>
+      <input id="name" type="text" maxlength=12 name="name" class="form-control form-control-lg" required>
+    </div>
+    <div class="form-group col-md-3">
+      <label for="operation">操作</label>
+      <select class="form-control form-control-lg" id="operation">
+        <option>证券买入</option>
+        <option>证券卖出</option>
+        <option>股息入账</option>
+        <option>红股入账</option>
+        <option>申购中签</option>
+        <option>股息红利税补</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+      <div class="form-group col-md-2">
+        <label for="volume">成交数量</label>
+        <input id="volume" type="number" min=-10000 max=10000 name="volume" class="form-control form-control-sm" required>
+      </div>
+      <div class="form-group col-md-2">
+        <label for="balance">变动后持股数量</label>
+        <input id="balance" type="number"  min=0  name="balance" class="form-control form-control-sm" required>
+      </div>
+      <div class="form-group col-md-2">
+        <label for="price">成交均价</label>
+        <input id="price" type="number" name="price" min=0 max=100 step=0.01 class="form-control form-control-sm" required>
+      </div>
+      <div class="form-group col-md-2">
+        <label for="turnover">成交金额</label>
+        <input id="turnover" type="number"  min=0 max=100000 step=0.01 name="turnover" class="form-control form-control-sm" required>
+      </div>
+      <div class="form-group col-md-2">
+        <label for="amount">发生金额</label>
+        <input id="amount" type="number" min=-50000 max=100000 step=0.01 name="amount" class="form-control form-control-sm" required>
+      </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group col-md-4">
+      <label for="brokerage">佣金</label>
+      <input id="brokerage" type="number" min=0 max=50 step=0.01 name="brokerage" class="form-control form-control-sm" required>
+    </div>
+    <div class="form-group col-md-4">
+      <label for="stamps">印花税</label>
+      <input id="stamps" type="number"  min=0 max=500 step=0.01 name="stamps" class="form-control form-control-sm" required>
+    </div>
+    <div class="form-group col-md-4">
+      <label for="transfer-fee">过户费</label>
+      <input id="transfer-fee" type="number"   min=0 max=5 step=0.01 name="transfer-fee" class="form-control form-control-sm" required>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">增加</button>
+</form>
+{{ end }}

@@ -1,0 +1,37 @@
+{{ define "content" }}
+<table class="table table-sm table-bordered table-striped table-hover">
+  <thead class="thead-dark">
+    <tr>
+      <th>日期</th>
+      <th>代码</th>
+      <th>名称</th>
+      <th>操作</th>
+      <th>数量</th>
+      <th>变动后持股数量</th>
+      <th>均价</th>
+      <th>成交金额</th>
+      <th>发生金额</th>
+      <th>佣金</th>
+      <th>印花税</th>
+      <th>过户费</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+      <td>{{ .Date | fdate }}</td>
+      <td>{{ .Code }}</td>
+      <td>{{ .Name }}</td>
+      <td>{{ .Operation }}</td>
+      <td>{{ .Volume }}</td>
+      <td>{{ .Balance }}</td>
+      <td>{{ .Price }}</td>
+      <td>{{ .Turnover }}</td>
+      <td>{{ .Amount }}</td>
+      <td>{{ .Brokerage }}</td>
+      <td>{{ .Stamps }}</td>
+      <td>{{ .TransferFee }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

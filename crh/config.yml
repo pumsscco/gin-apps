@@ -1,0 +1,16 @@
+---
+listen:
+  host: localhost
+  port: 55757
+mysql:
+  db: crh
+  host: localhost
+  port: 3306
+  user: crh
+  pass: VqumC5PRCpYLtRb2FV5n
+redis:
+  host: localhost
+  port: 6379
+  db: 7
+  pass: 3D6kiP36dYTK9X2a
+logfile: crh.log
