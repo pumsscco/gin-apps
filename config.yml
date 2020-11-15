@@ -1,0 +1,11 @@
+---
+mysql:
+  db: gin
+  host: localhost
+  port: 3306
+  user: gin
+  pass: '6$R^EQ6NmvN#99pqdgwLFpgP'
+redis:
+  host: localhost
+  port: 6379
+  pass: pFG64SBbhGB56K8Cv5eZbrdQ
