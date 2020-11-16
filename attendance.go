@@ -8,65 +8,145 @@ import (
 )
 //考勤表结构
 type Attendance struct {
-    Id        int `json:"id"`
+    //Id        int `json:"id"`
     CheckIn      time.Time `json:"checkin"`
     CheckOut     time.Time `json:"checkout"`
     Comments    string `json:"comments"`
 }
-//获取最近一条记录
-func getLatest() (attn Attendance, err error) {
-    val,err:=client.Get("latest").Result()
-    if err==nil {
-        json.Unmarshal([]byte(val),&attn)
-        return
-    }
-    err = Db.QueryRow("select id,checkin,checkout,comments from attendance order by checkin desc limit 1").Scan(&attn.Id, &attn.CheckIn, &attn.CheckOut, &attn.Comments)
-    as,err:=json.Marshal(attn)
-    client.Set("latest", string(as), 2*time.Second)
-    return
+type Duration struct {
+	Name string  `json: "name"` 
 }
-//获取最近一周记录
-func getLastWeek() (attns []Attendance, err error) {
-    val,err:=client.Get("last-week").Result()
-    if err==nil {
-        json.Unmarshal([]byte(val),&attns)
+//抓记录
+func rec(c *gin.Context) {
+    //先查一下输入的json有没有格式错误
+    var d Duration
+    if err := c.ShouldBindJSON(&d); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+    }
+    //然后依据具体的post条件，来分析结果
+    switch d.Name {
+    //先处理只取最近一条的情况
+    case "latest":
+        var attn Attendance
+        val,err:=client.Get("attendance:latest").Result()
+        if err==nil {
+            json.Unmarshal([]byte(val),&attn)
+            a_info:=gin.H{
+                "check_in": attn.CheckIn,
+                "check_out": attn.CheckOut,
+                "comments": attn.Comments,
+            }
+            c.IndentedJSON(http.StatusOK,a_info)
+            return
+        }
+        err = Db.QueryRow("select checkin,checkout,comments from attendance order by checkin desc limit 1").Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
+        if err!=nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		    return
+        }
+        as,err:=json.Marshal(attn)
+        if err!=nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		    return
+        } else {
+            client.Set("attendance:latest", string(as), 2*time.Second)
+        }
+        a_info:=gin.H{
+            "check_in": attn.CheckIn,
+            "check_out": attn.CheckOut,
+            "comments": attn.Comments,
+        }
+        c.IndentedJSON(http.StatusOK,a_info)
         return
+    case "last-week":
+        var attns []Attendance
+        val,err:=client.Get("attendance:last-week").Result()
+        if err==nil {
+            json.Unmarshal([]byte(val),&attns)
+            var a_infos []gin.H
+            for _, v:= range attns {
+                a_info:=gin.H{
+                    "check_in": v.CheckIn,
+                    "check_out": v.CheckOut,
+                    "comments": v.Comments,
+                }
+                a_infos=append(a_infos,a_info)
+            }
+            c.IndentedJSON(http.StatusOK,a_infos)
+        }
+        wSql:="select checkin,checkout,comments from attendance where date_add(checkin,interval 1 week)>now()"
+        rows,_ := Db.Query(wSql)
+        for rows.Next() {
+            attn:=Attendance{}
+            rows.Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
+            attns=append(attns,attn)
+        }
+        rows.Close()
+        as,err:=json.Marshal(attns)
+        if err!=nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		    return
+        } else {
+            client.Set("attendance:last-week", string(as), 2*time.Second)
+        }
+        var a_infos []gin.H
+        for _, v:= range attns {
+            a_info:=gin.H{
+                "check_in": v.CheckIn,
+                "check_out": v.CheckOut,
+                "comments": v.Comments,
+            }
+            a_infos=append(a_infos,a_info)
+        }
+        c.IndentedJSON(http.StatusOK,a_infos)
+    case "last-month":
+        var attns []Attendance
+        val,err:=client.Get("attendance:last-month").Result()
+        if err==nil {
+            json.Unmarshal([]byte(val),&attns)
+            var a_infos []gin.H
+            for _, v:= range attns {
+                a_info:=gin.H{
+                    "check_in": v.CheckIn,
+                    "check_out": v.CheckOut,
+                    "comments": v.Comments,
+                }
+                a_infos=append(a_infos,a_info)
+            }
+            c.IndentedJSON(http.StatusOK,a_infos)
+        }
+        wSql:="select checkin,checkout,comments from attendance where date_add(checkin,interval 1 month)>now()"
+        rows,_ := Db.Query(wSql)
+        for rows.Next() {
+            attn:=Attendance{}
+            rows.Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
+            attns=append(attns,attn)
+        }
+        rows.Close()
+        as,err:=json.Marshal(attns)
+        if err!=nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		    return
+        } else {
+            client.Set("attendance:last-month", string(as), 2*time.Second)
+        }
+        var a_infos []gin.H
+        for _, v:= range attns {
+            a_info:=gin.H{
+                "check_in": v.CheckIn,
+                "check_out": v.CheckOut,
+                "comments": v.Comments,
+            }
+            a_infos=append(a_infos,a_info)
+        }
+        c.IndentedJSON(http.StatusOK,a_infos)
     }
-    //redis里没有，从数据库里获得
-    wSql:="select checkin,checkout,comments from attendance where date_add(checkin,interval 1 week)>now()"
-    rows,_ := Db.Query(wSql)
-    for rows.Next() {
-        attn:=Attendance{}
-        rows.Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
-        attns=append(attns,attn)
-    }
-    rows.Close()
-    as,err:=json.Marshal(attns)
-    client.Set("last-week", string(as), 2*time.Second)
-    return
-}
-//获取最近一月记录
-func getLastMonth() (attns []Attendance, err error) {
-    val,err:=client.Get("last-month").Result()
-    if err==nil {
-        json.Unmarshal([]byte(val),&attns)
-        return
-    }
-    //redis里没有，从数据库里获得
-    mSql:="select checkin,checkout,comments from attendance where date_add(checkin,interval 1 month)>now()"
-    rows,_ := Db.Query(mSql)
-    for rows.Next() {
-        attn:=Attendance{}
-        rows.Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
-        attns=append(attns,attn)
-    }
-    rows.Close()
-    as,err:=json.Marshal(attns)
-    client.Set("last-month", string(as), 2*time.Second)
-    return
+
+    
 }
 //月度统计数据
-func monthHour() (monthHours map[string]float64) {
+func stat() (monthHours map[string]float64) {
     //先从redis取，如果有，就直接返回
     val,err:=client.Get("month-stats").Result()
     if err==nil {
