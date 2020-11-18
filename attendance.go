@@ -53,7 +53,7 @@ func rec(c *gin.Context) {
             c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		    return
         } else {
-            client.Set("attendance:latest", string(as), 2*time.Second)
+            client.Set("attendance:latest", string(as), 2*time.Hour)
         }
         a_info:=gin.H{
             "check_in": attn.CheckIn,
@@ -62,9 +62,10 @@ func rec(c *gin.Context) {
         }
         c.IndentedJSON(http.StatusOK,a_info)
         return
+    //近一周与近一月的
     case "last-week", "last-month":
         var attns []Attendance
-        val,err:=client.Get("attendance:last-week").Result()
+        val,err:=client.Get(fmt.Sprintf("attendance:%s",d.Name)).Result()
         if err==nil {
             json.Unmarshal([]byte(val),&attns)
             var a_infos []gin.H
@@ -92,7 +93,7 @@ func rec(c *gin.Context) {
             c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		    return
         } else {
-            client.Set(fmt.Sprintf("attendance:%s",d.Name), string(as), 2*time.Second)
+            client.Set(fmt.Sprintf("attendance:%s",d.Name), string(as), 2*time.Hour)
         }
         var a_infos []gin.H
         for _, v:= range attns {
