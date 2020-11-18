@@ -69,7 +69,7 @@ func main() {
 		//依据所带参数是latest/last-week/last-month，转向不同的处理函数或干脆合并，分情形输出，减少接口
 		attendance.POST("/rec",rec)
 		//与上面采取类似的思路
-		//attendance.POST("/stat",stat)
+		attendance.POST("/stat",stat)
 		//attendance.POST("/add", add)
 	}
 	/*楚留香项目

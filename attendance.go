@@ -107,96 +107,68 @@ func rec(c *gin.Context) {
         c.IndentedJSON(http.StatusOK,a_infos)    
     }
 }
-//月度统计数据
-/*func stat() (monthHours map[string]float64) {
+//统计数据
+func stat(c *gin.Context){
+    var d Duration
+    r:=make(gin.H)
+    var sql string
+    if err := c.ShouldBindJSON(&d); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
     //先从redis取，如果有，就直接返回
-    val,err:=client.Get("month-stats").Result()
+    dk:=fmt.Sprintf("attendance:%s-stats",d.Name)
+    val,err:=client.Get(dk).Result()
     if err==nil {
-        json.Unmarshal([]byte(val),&monthHours)
+        json.Unmarshal([]byte(val),&r)
+        c.IndentedJSON(http.StatusOK,r)
         return
     }
     //redis里没有，从数据库里获得
-    monthHours=make(map[string]float64)
-    mSql:=`SELECT year(checkin),month(checkin),
-        sum(hour(timediff(checkout,checkin))+minute(timediff(checkout,checkin))/60)
-        FROM attendance group by year(checkin),month(checkin)
-    `
-    rows,_ := Db.Query(mSql)
+    switch d.Name {
+    case "week", "month":
+        sql=fmt.Sprintf(`SELECT year(checkin),%s(checkin),
+            sum(hour(timediff(checkout,checkin))+minute(timediff(checkout,checkin))/60)
+            FROM attendance group by year(checkin),%[1]s(checkin)
+        `,d.Name)
+    case "year":
+        sql=`SELECT year(checkin),
+            sum(hour(timediff(checkout,checkin))+minute(timediff(checkout,checkin))/60)
+            FROM attendance group by year(checkin)
+        `
+    }
+    rows,_ := Db.Query(sql)
     for rows.Next() {
         //月统计映射表，键为年月组合，值为合计的小时数
         //monthHours['2019年11月']=217.5
-        var year,month int
+        var year,morw int
         var hours float64
-        rows.Scan(&year,&month,&hours)
-        yearMonth:=fmt.Sprintf("%d年%d月",year,month)
-        monthHours[yearMonth]=hours
+        var k string
+        switch d.Name {
+        case "week":
+            rows.Scan(&year,&morw,&hours)
+            k=fmt.Sprintf("%d年%02d周",year,morw)
+        case  "month":
+            rows.Scan(&year,&morw,&hours)
+            k=fmt.Sprintf("%d年%02d月",year,morw)
+        case "year":
+            rows.Scan(&year,&hours)
+            k=fmt.Sprintf("%d年",year)
+        }
+        r[k]=hours
     }
     rows.Close()
     //然后再写入redis
-    ms,_:=json.Marshal(monthHours)
-    client.Set("month-stats",string(ms),2*time.Second)
-    return
-}
-//周统计
-func weekHour() (weekHours map[string]float64) {
-    //先从redis取，如果有，就直接返回
-    val,err:=client.Get("week-stats").Result()
-    if err==nil {
-        json.Unmarshal([]byte(val),&weekHours)
+    s,err:=json.Marshal(r)
+    if err!=nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
+    } else {
+        client.Set(dk,string(s),2*time.Hour)
     }
-    //redis里没有，从数据库里获得
-    weekHours=make(map[string]float64)
-    wSql:=`SELECT year(checkin),week(checkin),
-        sum(hour(timediff(checkout,checkin))+minute(timediff(checkout,checkin))/60)
-        FROM attendance group by year(checkin),week(checkin)
-    `
-    rows,_ := Db.Query(wSql)
-    for rows.Next() {
-        //周统计映射表，键为年周组合，值为合计的小时数
-        //weekHours['2019年17周']=242
-        var year,week int
-        var hours float64
-        rows.Scan(&year,&week,&hours)
-        yearWeek:=fmt.Sprintf("%d年%d周",year,week)
-        weekHours[yearWeek]=hours
-    }
-    rows.Close()
-    //然后再写入redis
-    ws,_:=json.Marshal(weekHours)
-    client.Set("week-stats",string(ws),2*time.Second)
-    return
+    c.IndentedJSON(http.StatusOK,r)
 }
-//年统计
-func yearHour() (yearHours map[int]float64) {
-    //先从redis取，如果有，就直接返回
-    val,err:=client.Get("year-stats").Result()
-    if err==nil {
-        json.Unmarshal([]byte(val),&yearHours)
-        return
-    }
-    //redis里没有，从数据库里获得
-    yearHours=make(map[int]float64)
-    wSql:=`SELECT year(checkin),
-        sum(hour(timediff(checkout,checkin))+minute(timediff(checkout,checkin))/60)
-        FROM attendance group by year(checkin)
-    `
-    rows,_ := Db.Query(wSql)
-    for rows.Next() {
-        //年统计，键为年，值为合计的小时数
-        //yearHours[2019]=242
-        var year int
-        var hours float64
-        rows.Scan(&year,&hours)
-        yearHours[year]=hours
-    }
-    rows.Close()
-    //然后再写入redis
-    ys,_:=json.Marshal(yearHours)
-    client.Set("year-stats",string(ys),2*time.Second)
-    return
-}
-//创建新记录，返回数据为报错信息的字符串，如果成功，则返回空串
+/*创建新记录，返回数据为报错信息的字符串，如果成功，则返回空串
 func (attn Attendance)NewAttn() (errInfo string) {
     //获得日期的字符串形式，固定为2020-02-20这样的形式
     tf := "2006-01-02"
