@@ -2,7 +2,8 @@ package main
 
 import (
     "time"
-	"encoding/json"
+    "encoding/json"
+    "strings"
     "fmt"
     _ "github.com/go-sql-driver/mysql"
 )
@@ -59,7 +60,7 @@ func rec(c *gin.Context) {
         }
         c.IndentedJSON(http.StatusOK,a_info)
         return
-    case "last-week":
+    case "last-week", "last-month":
         var attns []Attendance
         val,err:=client.Get("attendance:last-week").Result()
         if err==nil {
@@ -75,8 +76,9 @@ func rec(c *gin.Context) {
             }
             c.IndentedJSON(http.StatusOK,a_infos)
         }
-        wSql:="select checkin,checkout,comments from attendance where date_add(checkin,interval 1 week)>now()"
-        rows,_ := Db.Query(wSql)
+        dur:=strings.Split(d.Name,"-")[1]
+        sql:=fmt.Sprintf("select checkin,checkout,comments from attendance where date_add(checkin,interval 1 %s)>now()",dur)
+        rows,_ := Db.Query(sql)
         for rows.Next() {
             attn:=Attendance{}
             rows.Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
@@ -88,7 +90,7 @@ func rec(c *gin.Context) {
             c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		    return
         } else {
-            client.Set("attendance:last-week", string(as), 2*time.Second)
+            client.Set(fmt.Sprintf("attendance:%s",d.Name), string(as), 2*time.Second)
         }
         var a_infos []gin.H
         for _, v:= range attns {
@@ -99,51 +101,7 @@ func rec(c *gin.Context) {
             }
             a_infos=append(a_infos,a_info)
         }
-        c.IndentedJSON(http.StatusOK,a_infos)
-    case "last-month":
-        var attns []Attendance
-        val,err:=client.Get("attendance:last-month").Result()
-        if err==nil {
-            json.Unmarshal([]byte(val),&attns)
-            var a_infos []gin.H
-            for _, v:= range attns {
-                a_info:=gin.H{
-                    "check_in": v.CheckIn,
-                    "check_out": v.CheckOut,
-                    "comments": v.Comments,
-                }
-                a_infos=append(a_infos,a_info)
-            }
-            c.IndentedJSON(http.StatusOK,a_infos)
-        }
-        wSql:="select checkin,checkout,comments from attendance where date_add(checkin,interval 1 month)>now()"
-        rows,_ := Db.Query(wSql)
-        for rows.Next() {
-            attn:=Attendance{}
-            rows.Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
-            attns=append(attns,attn)
-        }
-        rows.Close()
-        as,err:=json.Marshal(attns)
-        if err!=nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		    return
-        } else {
-            client.Set("attendance:last-month", string(as), 2*time.Second)
-        }
-        var a_infos []gin.H
-        for _, v:= range attns {
-            a_info:=gin.H{
-                "check_in": v.CheckIn,
-                "check_out": v.CheckOut,
-                "comments": v.Comments,
-            }
-            a_infos=append(a_infos,a_info)
-        }
-        c.IndentedJSON(http.StatusOK,a_infos)
-    }
-
-    
+        c.IndentedJSON(http.StatusOK,a_infos)    
 }
 //月度统计数据
 func stat() (monthHours map[string]float64) {
