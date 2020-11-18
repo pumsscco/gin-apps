@@ -1,6 +1,8 @@
 package main
 
 import (
+    "github.com/gin-gonic/gin"
+    "net/http"
     "time"
     "encoding/json"
     "strings"
@@ -102,9 +104,10 @@ func rec(c *gin.Context) {
             a_infos=append(a_infos,a_info)
         }
         c.IndentedJSON(http.StatusOK,a_infos)    
+    }
 }
 //月度统计数据
-func stat() (monthHours map[string]float64) {
+/*func stat() (monthHours map[string]float64) {
     //先从redis取，如果有，就直接返回
     val,err:=client.Get("month-stats").Result()
     if err==nil {
@@ -243,4 +246,4 @@ func (attn Attendance)NewAttn() (errInfo string) {
     }
     client.Set(checkday,"true",2*time.Second)
     return
-}
+}*/
