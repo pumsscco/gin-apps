@@ -72,15 +72,17 @@ func main() {
 		attendance.POST("/stat",stat)
 		attendance.POST("/add", add)
 	}
-	/*楚留香项目
+	//楚留香项目
 	crh:=router.Group("/crh")
 	{
-		crh.POST("/list", podList)
-		crh.POST("/detail", podDetail)
-		crh.POST("/container_list", podContainerList)
-		crh.POST("/container_detail", podContainerDetail)
+		crh.POST("/combo", combo)
+		//crh.POST("/fighter", fighter)
+		//crh.POST("/item", item)
+        //crh.POST("/enemy", enemy)
+        //crh.POST("/mission", mission)
+        //crh.POST("/role", role)
 	}
-	//仙剑四项目
+	/*仙剑四项目
 	pal4:=router.Group("/pal4")
 	{
 		pal4.POST("/list", svcList)
