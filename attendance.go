@@ -12,12 +12,12 @@ import (
 //考勤表结构
 type Attendance struct {
     //Id        int `json:"id"`
-    CheckIn      time.Time `json:"checkin"`
-    CheckOut     time.Time `json:"checkout"`
+    CheckIn      time.Time `json:"checkin"  binding:"required"`
+    CheckOut     time.Time `json:"checkout"  binding:"required"`
     Comments    string `json:"comments"`
 }
 type Duration struct {
-	Name string  `json: "name"` 
+	Name string  `json: "name" binding:"required"` 
 }
 //抓记录
 func rec(c *gin.Context) {
@@ -173,8 +173,8 @@ func stat(c *gin.Context){
 func add(c *gin.Context) {
     //先设置一个考勤记录的变形体，做为增加记录时的临时变量
     type AttnV struct {
-        CheckIn      string `json:"checkin"`
-        CheckOut     string `json:"checkout"`
+        CheckIn      string `json:"checkin"  binding:"required"`
+        CheckOut     string `json:"checkout"  binding:"required"`
         Comments    string `json:"comments"`
     }
     var attnV AttnV
