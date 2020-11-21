@@ -70,7 +70,7 @@ func main() {
 		attendance.POST("/rec",rec)
 		//与上面采取类似的思路
 		attendance.POST("/stat",stat)
-		//attendance.POST("/add", add)
+		attendance.POST("/add", add)
 	}
 	/*楚留香项目
 	crh:=router.Group("/crh")
