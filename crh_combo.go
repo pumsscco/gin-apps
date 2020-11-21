@@ -1,8 +1,12 @@
 package main
 
 import (
-	"encoding/json"
-	"time"
+    "github.com/gin-gonic/gin"
+    "net/http"
+    "time"
+    "encoding/json"
+    "fmt"
+    _ "github.com/go-sql-driver/mysql"
 )
 
 type Combo struct {
@@ -12,9 +16,23 @@ type Combo struct {
 }
 
 func combo(c *gin.Context) {
+	var  combos []Combo
+	var c_infos []gin.H
 	val, err := client.Get("crh:combo").Result()
 	if err == nil {
 		json.Unmarshal([]byte(val), &combos)
+		for _, v:= range combos {
+			c_info:=gin.H{
+				"name": v.Name,
+				"fighter1_name": v.Fighter1Name,
+				"fighter1_level": v.Fighter1Lvl,
+				"fighter2_name": v.Fighter2Name,
+				"fighter2_level": v.Fighter2Lvl,
+				"role": v.Role,
+			}
+			c_infos=append(c_infos,c_info)
+		}
+		c.IndentedJSON(http.StatusOK,c_infos)
 		return
 	}
 	sql := "select id,f1id,f1lvl,f2id,f2lvl,cast(user_flag as unsigned) from SPComboMartial where user_flag!=0"
@@ -38,9 +56,22 @@ func combo(c *gin.Context) {
 	}
 	rows.Close()
 	as, err := json.Marshal(combos)
-	client.Set("combo", string(as), 12*time.Hour)
+	client.Set("crh:combo", string(as), 24*time.Hour)
 	if err != nil {
-		logger.Print(err)
+		errInfo:=fmt.Sprintf("写入redis失败，错误：%v",err)
+		c.IndentedJSON(http.StatusInternalServerError,gin.H{"error": errInfo})
+	} else {
+		for _, v:= range combos {
+			c_info:=gin.H{
+				"name": v.Name,
+				"fighter1_name": v.Fighter1Name,
+				"fighter1_level": v.Fighter1Lvl,
+				"fighter2_name": v.Fighter2Name,
+				"fighter2_level": v.Fighter2Lvl,
+				"role": v.Role,
+			}
+			c_infos=append(c_infos,c_info)
+		}
+		c.IndentedJSON(http.StatusOK,c_infos)
 	}
-	return
 }

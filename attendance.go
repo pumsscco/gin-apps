@@ -65,10 +65,10 @@ func rec(c *gin.Context) {
     //近一周与近一月的
     case "last-week", "last-month":
         var attns []Attendance
+        var a_infos []gin.H
         val,err:=client.Get(fmt.Sprintf("attendance:%s",d.Name)).Result()
         if err==nil {
             json.Unmarshal([]byte(val),&attns)
-            var a_infos []gin.H
             for _, v:= range attns {
                 a_info:=gin.H{
                     "check_in": v.CheckIn,
@@ -95,7 +95,6 @@ func rec(c *gin.Context) {
         } else {
             client.Set(fmt.Sprintf("attendance:%s",d.Name), string(as), 2*time.Hour)
         }
-        var a_infos []gin.H
         for _, v:= range attns {
             a_info:=gin.H{
                 "check_in": v.CheckIn,
