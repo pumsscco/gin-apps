@@ -11,7 +11,6 @@ import (
 )
 //考勤表结构
 type Attendance struct {
-    //Id        int `json:"id"`
     CheckIn      time.Time `json:"checkin"  binding:"required"`
     CheckOut     time.Time `json:"checkout"  binding:"required"`
     Comments    string `json:"comments"`
@@ -32,33 +31,29 @@ func rec(c *gin.Context) {
     //先处理只取最近一条的情况
     case "latest":
         var attn Attendance
+        a_info:=make(gin.H)
         val,err:=client.Get("attendance:latest").Result()
         if err==nil {
-            json.Unmarshal([]byte(val),&attn)
-            a_info:=gin.H{
-                "check_in": attn.CheckIn,
-                "check_out": attn.CheckOut,
-                "comments": attn.Comments,
-            }
+            json.Unmarshal([]byte(val),&a_info)
             c.IndentedJSON(http.StatusOK,a_info)
             return
         }
         err = Db.QueryRow("select checkin,checkout,comments from attendance order by checkin desc limit 1").Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
         if err!=nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+            c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		    return
         }
-        as,err:=json.Marshal(attn)
-        if err!=nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		    return
-        } else {
-            client.Set("attendance:latest", string(as), 2*time.Hour)
-        }
-        a_info:=gin.H{
+        a_info=gin.H{
             "check_in": attn.CheckIn,
             "check_out": attn.CheckOut,
             "comments": attn.Comments,
+        }
+        s,err:=json.Marshal(a_info)
+        if err!=nil {
+            c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		    return
+        } else {
+            client.Set("attendance:latest", string(s), 2*time.Hour)
         }
         c.IndentedJSON(http.StatusOK,a_info)
         return
@@ -66,18 +61,12 @@ func rec(c *gin.Context) {
     case "last-week", "last-month":
         var attns []Attendance
         var a_infos []gin.H
-        val,err:=client.Get(fmt.Sprintf("attendance:%s",d.Name)).Result()
+        k:=fmt.Sprintf("attendance:%s",d.Name)
+        val,err:=client.Get(k).Result()
         if err==nil {
-            json.Unmarshal([]byte(val),&attns)
-            for _, v:= range attns {
-                a_info:=gin.H{
-                    "check_in": v.CheckIn,
-                    "check_out": v.CheckOut,
-                    "comments": v.Comments,
-                }
-                a_infos=append(a_infos,a_info)
-            }
+            json.Unmarshal([]byte(val),&a_infos)
             c.IndentedJSON(http.StatusOK,a_infos)
+            return
         }
         dur:=strings.Split(d.Name,"-")[1]
         sql:=fmt.Sprintf("select checkin,checkout,comments from attendance where date_add(checkin,interval 1 %s)>now()",dur)
@@ -88,13 +77,6 @@ func rec(c *gin.Context) {
             attns=append(attns,attn)
         }
         rows.Close()
-        as,err:=json.Marshal(attns)
-        if err!=nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		    return
-        } else {
-            client.Set(fmt.Sprintf("attendance:%s",d.Name), string(as), 2*time.Hour)
-        }
         for _, v:= range attns {
             a_info:=gin.H{
                 "check_in": v.CheckIn,
@@ -103,7 +85,14 @@ func rec(c *gin.Context) {
             }
             a_infos=append(a_infos,a_info)
         }
-        c.IndentedJSON(http.StatusOK,a_infos)    
+        s,err:=json.Marshal(a_infos)
+        if err!=nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		    return
+        } else {
+            client.Set(k, string(s), 2*time.Hour)
+        }
+        c.IndentedJSON(http.StatusOK,a_infos)
     }
 }
 //统计数据
@@ -160,15 +149,13 @@ func stat(c *gin.Context){
     //然后再写入redis
     s,err:=json.Marshal(r)
     if err!=nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     } else {
         client.Set(dk,string(s),2*time.Hour)
     }
     c.IndentedJSON(http.StatusOK,r)
 }
-
-
 //创建新记录，返回数据为报错信息字符串，如果成功，则返回成功信息
 func add(c *gin.Context) {
     //先设置一个考勤记录的变形体，做为增加记录时的临时变量
@@ -217,7 +204,7 @@ func add(c *gin.Context) {
     err = Db.QueryRow(checksql,attn.CheckIn.Year(),attn.CheckIn.YearDay()).Scan(&cnt)
     if err!=nil {
         errInfo=fmt.Sprintf("查询当日记录出错：%v",err)
-        c.JSON(http.StatusBadRequest, gin.H{"error": errInfo})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": errInfo})
         return
     } else if cnt!=0 {
         c.JSON(http.StatusBadRequest, gin.H{"error": "已经有当日记录！"})
@@ -228,7 +215,7 @@ func add(c *gin.Context) {
     _, err = Db.Exec(statement,attn.CheckIn,attn.CheckOut,attn.Comments)
     if err != nil {
         errInfo=fmt.Sprintf("无法创建新记录，错误：%v",err)
-        c.JSON(http.StatusBadRequest, gin.H{"error": errInfo})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": errInfo})
         return
     } else {
         client.Set(nk,"true",2*time.Hour)
