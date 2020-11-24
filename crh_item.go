@@ -1,5 +1,5 @@
 package main
-
+/*
 import (
 	"fmt"
 	"reflect"
@@ -108,4 +108,4 @@ func getItemType(t string) (items Items) {
 		logger.Print(err)
 	}
 	return
-}
+}*/

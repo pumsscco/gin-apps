@@ -77,7 +77,7 @@ func main() {
 	{
 		crh.POST("/combo", combo)
 		crh.POST("/fighter", fighter)
-		crh.POST("/item", item)
+		//crh.POST("/item", item)
         //crh.POST("/enemy", enemy)
         //crh.POST("/mission", mission)
         //crh.POST("/role", role)

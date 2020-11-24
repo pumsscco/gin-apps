@@ -5,7 +5,6 @@ import (
     "net/http"
     "time"
     "encoding/json"
-    "fmt"
     _ "github.com/go-sql-driver/mysql"
 )
 type Combo struct {
