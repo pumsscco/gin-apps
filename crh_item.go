@@ -1,71 +1,77 @@
 package main
-/*
+
 import (
-	"fmt"
-	"reflect"
-	"strings"
-	"time"
-	"encoding/json"
+    "encoding/json"
+    "fmt"
+    "github.com/gin-gonic/gin"
+    "net/http"
+    "reflect"
+    "strings"
+    "time"
+    _ "github.com/go-sql-driver/mysql"
 )
 
 //两张物品表的合并结构，加上少量额外的字段，用于存储解析出来的数据
 type Item struct {
-	Id                               int
-	Name, Description, Attribute     string //名称、描述、属性综合
-	Strength, Accuracy, CritRate     int    //力道、命中、暴击
-	Defence, Agility, Quick          int    //守备、活泛、迅捷
-	Intelligence, MP                 int    //才识、内力、要求等级
-	Price, RoleFlag, Func, FuncParam int    //价格、角色标志位、调用函数
-	ValidRoles                       string //适用角色
+	Id  int  		`json:"id"`
+	Name string `json:"name"`
+	Description string  `json:"description"`
+	Attribute     string  `json:"attribute,omitempty"`
+	Strength int  `json:"-"`
+	Accuracy int   `json:"-"`
+	CritRate     int    `json:"-"`
+	Defence int   `json:"-"`
+	Agility int `json:"-"`
+	Quick          int    `json:"-"`
+	Intelligence int 		`json:"-"`
+	MP                 int    `json:"-"`
+	Price int   		`json:"price,omitempty"`
+	RoleFlag int 		`json:"-"`
+	Func int 		`json:"function,omitempty"`
+	FuncParam int    `json:"function_parameter,omitempty"`
+	ValidRoles           string `json:"valid_roles,omitempty"`
 }
-type Items struct {
-	Type string
-	IsEquip, HasEff, IsKungfu, OnlyPrice,IsFood bool
-	ItemList                             []Item
+type ItemType struct {
+	Type string `json:"type" binding:"required"`
 }
 
 //利用物品类型（中文），获得该类全部的原始数据，属性内容合并
-func getItemType(t string) (items Items) {
-	k:=fmt.Sprintf("it:%s",t)
-    val,err:=client.Get(k).Result()
-    if err==nil {
-        json.Unmarshal([]byte(val),&items)
+func item(c *gin.Context) {
+	var it ItemType
+	var items []Item
+	var err error
+	if err = c.ShouldBindJSON(&it); err != nil {    
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-	items.Type=t
+	k:=fmt.Sprintf("crh:item:%s",it.Type)
+    val,err:=client.Get(k).Result()
+    if err==nil {
+		json.Unmarshal([]byte(val),&items)
+		c.IndentedJSON(http.StatusOK,items)
+        return
+    }
 	sql := `
         select id,name,strength,accuracy,crit_rate,defence,agility,quick,intelligence,mp,price,
         cast(user_flag as unsigned),func,func_param from SPItemData where type=? and name not like "%保留%"
     `
 	typeMap := map[string]int{
-		"扇": 1, "剑": 2, "短剑": 3, "弓": 4,
-		"盔甲": 6, "鞋": 7, "佩饰": 8,
-		"武功": 10,
-		"丹药": 12, "暗器": 12, "食物": 12,
-		"食材": 13,
+		"fan": 1, "sword": 2, "dagger": 3, "bow": 4,
+		"armor": 6, "boots": 7, "ornament": 8,
+		"kungfu": 10,
+		"elixir": 12, "hidden-weapon": 12, "food": 12,
+		"ingredient": 13,
 	}
-	switch t {
-	case "扇","弓","盔甲","鞋":
-		items.IsEquip=true
-	case "剑","短剑","佩饰":
-		items.IsEquip=true
-		items.HasEff=true
-	case "武功":
-		items.IsKungfu=true
-	case "丹药":
+	switch it.Type {
+	case "elixir":
 		sql += " and id between 201 and 230"
-		items.OnlyPrice=true
-	case "暗器":
+	case "hidden-weapon":
 		sql += " and id between 261 and 280"
-	case "食物":
+	case "food":
 		sql += " and id between 361 and 380"
-		items.IsFood=true
-	case "食材":
-		items.OnlyPrice=true
 	}
-	rows, _ := Db.Query(sql, typeMap[t])
+	rows, _ := Db.Query(sql, typeMap[it.Type])
 	for rows.Next() {
-		//取出原始数据
 		i := Item{}
 		rows.Scan(
 			&i.Id, &i.Name, &i.Strength, &i.Accuracy, &i.CritRate, &i.Defence, &i.Agility, &i.Quick,
@@ -73,7 +79,7 @@ func getItemType(t string) (items Items) {
 		)
 		//合并属性，依次为力道、命中、暴击、守备、活泛、迅捷、才识、内力
 		//+剔除食材、暗器、丹药
-		if t != "食材" && t != "暗器" && t != "丹药" {
+		if it.Type != "ingredient" && it.Type != "hidden-weapon" && it.Type != "elixir" {
 			comments := [][]string{
 				{"Strength", "力道"}, {"Accuracy", "命中"}, {"CritRate", "暴击"},
 				{"Defence", "守备"}, {"Agility", "活泛"}, {"Quick", "迅捷"},
@@ -87,25 +93,27 @@ func getItemType(t string) (items Items) {
 					i.Attribute += fmt.Sprintf("%s%d ", f[1], fv)
 				}
 			}
-			if t != "食物" {
+			if it.Type != "food" {
 				i.ValidRoles = getValidRole(i.RoleFlag)
 			}
 		}
-		if t == "武功" {
+		if it.Type == "kungfu" {
 			i.Attribute = strings.Replace(i.Attribute, "+", ":", -1)
 		}
-		if t == "食物" {
+		if it.Type == "food" {
 			i.Attribute = strings.Replace(strings.Replace(strings.Replace(i.Attribute, "命中-1 ", "", -1), "力道", "生命", -1), "暴击", "力道", -1)
 		}
 		i.Description=getName("SPItemHelp",i.Id)
 		i.Attribute = strings.TrimSuffix(i.Attribute, " ")
-		items.ItemList = append(items.ItemList, i)
+		items = append(items, i)
 	}
 	rows.Close()
-	as,err:=json.Marshal(items)
-	client.Set(k, string(as), 12*time.Hour)
+	s,err:=json.Marshal(items)
 	if err!=nil {
-		logger.Print(err)
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else {
+		client.Set(k, string(s), 36*time.Hour)
+		c.IndentedJSON(http.StatusOK,items)
 	}
-	return
-}*/
+}

@@ -31,11 +31,10 @@ func rec(c *gin.Context) {
     //先处理只取最近一条的情况
     case "latest":
         var attn Attendance
-        a_info:=make(gin.H)
         val,err:=client.Get("attendance:latest").Result()
         if err==nil {
-            json.Unmarshal([]byte(val),&a_info)
-            c.IndentedJSON(http.StatusOK,a_info)
+            json.Unmarshal([]byte(val),&attn)
+            c.IndentedJSON(http.StatusOK,attn)
             return
         }
         err = Db.QueryRow("select checkin,checkout,comments from attendance order by checkin desc limit 1").Scan(&attn.CheckIn, &attn.CheckOut, &attn.Comments)
@@ -43,29 +42,23 @@ func rec(c *gin.Context) {
             c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		    return
         }
-        a_info=gin.H{
-            "check_in": attn.CheckIn,
-            "check_out": attn.CheckOut,
-            "comments": attn.Comments,
-        }
-        s,err:=json.Marshal(a_info)
+        s,err:=json.Marshal(attn)
         if err!=nil {
             c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		    return
         } else {
             client.Set("attendance:latest", string(s), 2*time.Hour)
+            c.IndentedJSON(http.StatusOK,attn)
+            return
         }
-        c.IndentedJSON(http.StatusOK,a_info)
-        return
     //近一周与近一月的
     case "last-week", "last-month":
         var attns []Attendance
-        var a_infos []gin.H
         k:=fmt.Sprintf("attendance:%s",d.Name)
         val,err:=client.Get(k).Result()
         if err==nil {
-            json.Unmarshal([]byte(val),&a_infos)
-            c.IndentedJSON(http.StatusOK,a_infos)
+            json.Unmarshal([]byte(val),&attns)
+            c.IndentedJSON(http.StatusOK,attns)
             return
         }
         dur:=strings.Split(d.Name,"-")[1]
@@ -77,28 +70,20 @@ func rec(c *gin.Context) {
             attns=append(attns,attn)
         }
         rows.Close()
-        for _, v:= range attns {
-            a_info:=gin.H{
-                "check_in": v.CheckIn,
-                "check_out": v.CheckOut,
-                "comments": v.Comments,
-            }
-            a_infos=append(a_infos,a_info)
-        }
-        s,err:=json.Marshal(a_infos)
+        s,err:=json.Marshal(attns)
         if err!=nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		    return
         } else {
             client.Set(k, string(s), 2*time.Hour)
-        }
-        c.IndentedJSON(http.StatusOK,a_infos)
+            c.IndentedJSON(http.StatusOK,attns)
+        }    
     }
 }
 //统计数据
 func stat(c *gin.Context){
     var d Duration
-    r:=make(gin.H)
+    r:=make(map[string]float64)
     var sql string
     if err := c.ShouldBindJSON(&d); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -153,8 +138,8 @@ func stat(c *gin.Context){
         return
     } else {
         client.Set(dk,string(s),2*time.Hour)
-    }
-    c.IndentedJSON(http.StatusOK,r)
+        c.IndentedJSON(http.StatusOK,r)
+    } 
 }
 //创建新记录，返回数据为报错信息字符串，如果成功，则返回成功信息
 func add(c *gin.Context) {

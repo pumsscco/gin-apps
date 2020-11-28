@@ -53,8 +53,6 @@ func fighter(c *gin.Context) {
 	var sql,k,table string
 	var err error
     var ufs []UniqueFighter
-    //logger.Printf("c操作前分析: %v",*c)
-    
     if err = c.ShouldBindJSON(&ft); err != nil {    
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return

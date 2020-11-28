@@ -8,56 +8,51 @@ import (
     _ "github.com/go-sql-driver/mysql"
 )
 type Combo struct {
-	Id                                                     int
-	Fighter1, Fighter1Lvl, Fighter2, Fighter2Lvl, RoleFlag int
-	Role, Name, Fighter1Name, Fighter2Name                 string
+	Id  int		`json:"-"`
+	Role string 		`json:"role"`
+	Name string 		`json:"name"`
+	Fighter1Name string 		`json:"fighter1_name"`
+	Fighter1Lvl int 		`json:"fighter1_level"`
+	Fighter2Name string		`json:"fighter2_name"`
+	Fighter2Lvl int 		`json:"fighter2_level"`
+	Fighter1 int		`json:"-"`
+	Fighter2 int		`json:"-"`
+	RoleFlag int		`json:"-"`	
 }
 func combo(c *gin.Context) {
 	var  combos []Combo
-	var c_infos []gin.H
-	val, err := client.Get("crh:combo").Result()
-	if err == nil {
-		json.Unmarshal([]byte(val), &c_infos)
-		c.IndentedJSON(http.StatusOK,c_infos)
-		return
+    val, err := client.Get("crh:combo").Result()
+    if err == nil {
+        json.Unmarshal([]byte(val), &combos)
+        c.IndentedJSON(http.StatusOK,combos)
+        return
 	}
 	sql := "select id,f1id,f1lvl,f2id,f2lvl,cast(user_flag as unsigned) from SPComboMartial where user_flag!=0"
-	rows, _ := Db.Query(sql)
-	for rows.Next() {
-		combo := Combo{}
-		rows.Scan(
-			&combo.Id, &combo.Fighter1, &combo.Fighter1Lvl, &combo.Fighter2, &combo.Fighter2Lvl, &combo.RoleFlag,
-		)
-		combo.Name = getName("SPFighterTable2", combo.Id)
-		combo.Fighter1Name = getName("SPFighterTable2", combo.Fighter1)
-		if combo.Fighter1Name == "" {
-			combo.Fighter1Name = getName("SPFighterTable1", combo.Fighter1)
-		}
-		combo.Fighter2Name = getName("SPFighterTable2", combo.Fighter2)
-		if combo.Fighter2Name == "" {
-			combo.Fighter2Name = getName("SPFighterTable1", combo.Fighter2)
-		}
-		combo.Role = getValidRole(combo.RoleFlag)
-		combos = append(combos, combo)
+    rows, _ := Db.Query(sql)
+    for rows.Next() {
+        cb := Combo{}
+        rows.Scan(
+            &cb.Id, &cb.Fighter1, &cb.Fighter1Lvl, &cb.Fighter2, &cb.Fighter2Lvl, &cb.RoleFlag,
+        )
+        cb.Name = getName("SPFighterTable2", cb.Id)
+        cb.Fighter1Name = getName("SPFighterTable2", cb.Fighter1)
+        if cb.Fighter1Name == "" {
+            cb.Fighter1Name = getName("SPFighterTable1", cb.Fighter1)
+        }
+        cb.Fighter2Name = getName("SPFighterTable2", cb.Fighter2)
+        if cb.Fighter2Name == "" {
+            cb.Fighter2Name = getName("SPFighterTable1", cb.Fighter2)
+        }
+        cb.Role = getValidRole(cb.RoleFlag)
+        combos = append(combos, cb)
 	}
 	rows.Close()
-	for _, v:= range combos {
-		c_info:=gin.H{
-			"name": v.Name,
-			"fighter1_name": v.Fighter1Name,
-			"fighter1_level": v.Fighter1Lvl,
-			"fighter2_name": v.Fighter2Name,
-			"fighter2_level": v.Fighter2Lvl,
-			"role": v.Role,
-		}
-		c_infos=append(c_infos,c_info)
-	}
-	s, err := json.Marshal(c_infos)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	} else {
-		client.Set("crh:combo", string(s), 24*time.Hour)
-		c.IndentedJSON(http.StatusOK,c_infos)
-	}
+	s, err := json.Marshal(combos)
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    } else {
+        client.Set("crh:combo", string(s), 36*time.Hour)
+        c.IndentedJSON(http.StatusOK,combos)
+    }
 }
