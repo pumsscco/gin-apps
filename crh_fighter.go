@@ -58,7 +58,7 @@ func fighter(c *gin.Context) {
         return
     }
     if ft.Name!="" { //处理明细请求
-        k=fmt.Sprintf("crh:fighterdetail:%s:%s",ft.Type,ft.Name)
+        k=fmt.Sprintf("crh:fighter_detail:%s:%s",ft.Type,ft.Name)
         val,err:=client.Get(k).Result()
         if err==nil {
             json.Unmarshal([]byte(val),&fighters)
@@ -126,7 +126,7 @@ func fighter(c *gin.Context) {
             return
         } 
     } else { //处理列表请求
-        k=fmt.Sprintf("crh:figtherlist:%s",ft.Type)
+        k=fmt.Sprintf("crh:fighter_list:%s",ft.Type)
         val,err:=client.Get(k).Result()
         if err==nil {
             json.Unmarshal([]byte(val),&ufs)

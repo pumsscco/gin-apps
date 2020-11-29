@@ -5,7 +5,6 @@ import (
     "net/http"
     "time"
     "encoding/json"
-    _ "github.com/go-sql-driver/mysql"
 )
 type Combo struct {
 	Id  int		`json:"-"`

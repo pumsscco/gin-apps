@@ -31,13 +31,9 @@ type Item struct {
 	FuncParam int    `json:"function_parameter,omitempty"`
 	ValidRoles           string `json:"valid_roles,omitempty"`
 }
-type ItemType struct {
-	Type string `json:"type" binding:"required"`
-}
 
-//利用物品类型（中文），获得该类全部的原始数据，属性内容合并
 func item(c *gin.Context) {
-	var it ItemType
+	var it Type
 	var items []Item
 	var err error
 	if err = c.ShouldBindJSON(&it); err != nil {    

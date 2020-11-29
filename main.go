@@ -78,9 +78,9 @@ func main() {
 		crh.POST("/combo", combo)
 		crh.POST("/fighter", fighter)
 		crh.POST("/item", item)
-        //crh.POST("/enemy", enemy)
-        //crh.POST("/mission", mission)
-        //crh.POST("/role", role)
+        crh.POST("/enemy", enemy)
+        crh.POST("/mission", mission)
+        crh.POST("/role", role)
 	}
 	/*仙剑四项目
 	pal4:=router.Group("/pal4")

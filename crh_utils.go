@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"strings"
 )
+type Type struct {
+	Type string `json:"type" binding:"required"`
+}
 //角色信息组合
 type Role struct {
     Name        string      //名字
