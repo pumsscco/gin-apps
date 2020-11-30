@@ -82,14 +82,22 @@ func main() {
         crh.POST("/mission", mission)
         crh.POST("/role", role)
 	}
-	/*仙剑四项目
+	//仙剑四项目
 	pal4:=router.Group("/pal4")
-	{
-		pal4.POST("/list", svcList)
-		pal4.POST("/detail", svcDetail)
-		pal4.POST("/pods", svcPods)
+	{  //除最后拾取与找寻物品的两个接口外，其余均只用一个type参数即可
+		pal4.POST("/equipment", equipment) 
+		//pal4.POST("/property", property)
+        //pal4.POST("/prescription", prescription)
+        //pal4.POST("/question", question)
+        //pal4.POST("/mission", mission)
+        //pal4.POST("/magic", magic)
+        //pal4.POST("/stunt", stunt)
+        //pal4.POST("/upgrade", upgrade)
+        //pal4.POST("/enemy", enemy)
+        //pal4.POST("/pick", pick)
+        //pal4.POST("/find", find)
 	}
-	//股票项目
+	/*股票项目
 	stock:=router.Group("/stock")
 	{
 		stock.POST("/list", nsList)

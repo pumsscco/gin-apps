@@ -4,7 +4,6 @@ import (
     "encoding/json"
     "fmt"
     "github.com/gin-gonic/gin"
-    "html/template"
     "net/http"
     "reflect"
     "strings"
@@ -30,7 +29,7 @@ type FighterLevel struct {
     Param2 int  `json:"-"`
     Param3 int `json:"-"`
     Param4 int `json:"-"`
-    Params template.HTML `json:"parameters,omitempty"`
+    Params string `json:"parameters,omitempty"`
     //外功专属
     AdditionRate int `json:"additional_rate,omitempty"`
     BaseEffect int `json:"base_effect,omitempty"`
@@ -97,7 +96,6 @@ func fighter(c *gin.Context) {
                     }
                 }
                 p=strings.TrimSuffix(p," ")
-                lvl.Params=template.HTML(p)
                 fighters.FighterLevels = append(fighters.FighterLevels, lvl)
             }
         } else if table=="SPFighterTable2" {
