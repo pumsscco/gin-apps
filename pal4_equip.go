@@ -10,18 +10,18 @@ import (
 //将类别提取出后的结构组合，适用于自动依据类别填充模板
 type Equip struct {
     Id int                 `json:"id"`
-	Name string
-	Description string
-	Attribute     string      //名称、描述、属性综合
-	Model string
-	Texture     string   //模型、贴图、左手武器、右手武器
-	LvLmt int
-	Price int
-	LingCap          int         //等级要求、价格、灵容量
-	Potential int
-	MaxHP int
-	AdditionalRage int //潜力、精上限提升、怒气增加
-	MaxMP int
+	Name string         `json:"name"`
+	Description string  `json:"description"`
+	Attribute     string   `json:"attribute,omitempty"`
+	Model string  `json:"model,omitempty"`
+	Texture     string   `json:"texture,omitempty"`
+	LvLmt int   `json:"level_limit,omitempty"`
+	Price int   `json:"price,omitempty"`
+	LingCap          int        `json:"ling_capacity,omitempty"`
+	Potential int   `json:"potential,omitempty"`
+	MaxHP int   `json:"max_hp,omitempty"`
+	AdditionalRage int `json:"additional_rage,omitempty"`
+	MaxMP int   `json:"max_mp,omitempty"`
 	Physical int
 	Toughness int
 	Speed int
