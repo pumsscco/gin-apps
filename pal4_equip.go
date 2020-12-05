@@ -1,11 +1,13 @@
 package main
 
 import (
-    "fmt"
-    "strings"
-    "reflect"
-    "time"
     "encoding/json"
+    "fmt"
+    "github.com/gin-gonic/gin"
+    "net/http"
+    "reflect"
+    "strings"
+    "time"
 )
 //将类别提取出后的结构组合，适用于自动依据类别填充模板
 type Equip struct {
@@ -22,57 +24,56 @@ type Equip struct {
 	MaxHP int   `json:"max_hp,omitempty"`
 	AdditionalRage int `json:"additional_rage,omitempty"`
 	MaxMP int   `json:"max_mp,omitempty"`
-	Physical int
-	Toughness int
-	Speed int
-	Lucky int
-	Will int //神上限提升、武防速运灵
-	Water int
-	Fire int
-	Thunder int
-	Air int
-	Earth int         //水火雷风土五灵属性
-	WaterAdditional int
-	FireAdditional int
-	ThunderAdditional int  //水火雷伤害追加
-	AirAdditional int
-	EarthAdditional int //风土伤害追加
-	PhysicalExtract float32
-	WaterExtract float32
-	FireExtract float32   //物理、水、火吸收
-	ThunderExtract float32
-	AirExtract float32
-	EarthExtract float32 //雷风土吸收
-	PhysicalReact float32
-	WaterReact float32
-	FireReact float32   //物理、水、火反弹
-	ThunderReact float32
-	AirReact float32
-	EarthReact float32 //雷风土反弹
-	AdditionalCritical float32
-	FendOff float32
-	AdditionalHitting float32 //暴击、格挡、命中追加
-    Effect1 string //刀光特效、购买场景
-    BuyScene string
+	Physical int  `json:"physical,omitempty"`
+	Toughness int  `json:"toughness,omitempty"`
+	Speed int  `json:"speed,omitempty"`
+	Lucky int   `json:"lucky,omitempty"`
+	Will int `json:"will,omitempty"`
+	Water int  `json:"water,omitempty"`
+	Fire int  `json:"fire,omitempty"`
+	Thunder int  `json:"thunder,omitempty"`
+	Air int  `json:"air,omitempty"`
+	Earth int         `json:"earth,omitempty"`
+	WaterAdditional int  `json:"water_additional,omitempty"`
+	FireAdditional int  `json:"fire_additional,omitempty"`
+	ThunderAdditional int  `json:"thunder_additional,omitempty"`
+	AirAdditional int   `json:"air_additional,omitempty"`
+	EarthAdditional int `json:"earth_additional,omitempty"`
+	PhysicalExtract float32   `json:"physical_extract,omitempty"`
+	WaterExtract float32  `json:"water_extract,omitempty"`
+	FireExtract float32   `json:"fire_extract,omitempty"`
+	ThunderExtract float32   `json:"thunder_extract,omitempty"`
+	AirExtract float32   `json:"air_extract,omitempty"`
+	EarthExtract float32   `json:"earth_extract,omitempty"`
+	PhysicalReact float32   `json:"physical_react,omitempty"`
+	WaterReact float32   `json:"water_react,omitempty"`
+	FireReact float32  `json:"fire_react,omitempty"`
+	ThunderReact float32  `json:"thunder_react,omitempty"`
+	AirReact float32  `json:"air_react,omitempty"`
+	EarthReact float32 `json:"earth_react,omitempty"`
+	AdditionalCritical float32   `json:"additional_critical,omitempty"`
+	FendOff float32   `json:"fend_off,omitempty"`
+	AdditionalHitting float32   `json:"additional_hitting,omitempty"`
+    Effect1 string   `json:"effect1,omitempty"`
+    BuyScene string    `json:"buy_scene,omitempty"`
 }
-type Equips struct {
-    Type string         //装备类型，剑、双剑等
-    IsDswordOrSword bool //剑与双剑类型的判定
-    EquipList []Equip
-}
-func (eq *Equips) MarshalBinary() ([]byte,error) {
-    return json.Marshal(eq)
-}
-func (eq *Equips) UnmarshalBinary(data []byte) error {
-    return json.Unmarshal(data,eq)
-}
+
 //依据装备类型的中文名，获得该类物品的全部属性
-func getEquipType(equipType string) (equips Equips)  {
-    k:=fmt.Sprintf("%s:list",equipType)
-    /*equips, err := client.Get(k).Result()
-	if err == nil {
-		return
-	}*/
+func equipment(c *gin.Context) {
+    var equips []Equip
+    var et Type
+    var err error
+	if err = c.ShouldBindJSON(&et); err != nil {    
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    k:=fmt.Sprintf("pal4:equip:%s",et.Type)
+    val,err:=client.Get(k).Result()
+    if err==nil {
+		json.Unmarshal([]byte(val),&equips)
+		c.IndentedJSON(http.StatusOK,equips)
+        return
+    }
     equipAttribute:=[][]string{
         {"MaxHP","精上限"},{"AdditionalRage","气"},{"MaxMP","神上限"},
         {"Physical","武"},{"Toughness","防"},{"Speed","速"},{"Lucky","运"},{"Will","灵"},
@@ -86,10 +87,7 @@ func getEquipType(equipType string) (equips Equips)  {
         {"AdditionalCritical","暴击"},{"FendOff","格挡"},{"AdditionalHitting","命中"},
         {"LingCap","灵蕴"},{"Potential","潜力"},
     }
-    if equipType=="双剑" || equipType=="剑" {
-        equips.IsDswordOrSword=true
-    }
-    typeId:=getId("EquipType",equipType)
+    typeId:=getId("EquipType",et.Type)
     //利用类型ID取原始数据
     equipList:=[]Equip{}
     equipSql:=`
@@ -136,18 +134,15 @@ func getEquipType(equipType string) (equips Equips)  {
         } else {
             equip.BuyScene=buyScene
         }        
-        equipList = append(equipList, equip)
+        equips = append(equips, equip)
     }
     rows.Close()
-    equips.EquipList=equipList
-    equips.Type=equipType
-    
-    //client.Set(k,equips,5*time.Minute)
-    err:=client.Set(k,equips,5*time.Minute).Err()
-    if err!=nil {
-        //logger.Println("equip redis set result: ",statusCmd)
-        logger.Println("equip redis set error: ",err)
-        //panic(err)
-    }
-    return
+	s,err:=json.Marshal(equips)
+	if err!=nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else {
+		client.Set(k, string(s), 36*time.Hour)
+		c.IndentedJSON(http.StatusOK,equips)
+	}
 }

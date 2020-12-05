@@ -8,7 +8,6 @@ import (
     "reflect"
     "strings"
     "time"
-    _ "github.com/go-sql-driver/mysql"
 )
 
 //两张物品表的合并结构，加上少量额外的字段，用于存储解析出来的数据
