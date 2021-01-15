@@ -85,7 +85,7 @@ func main() {
 	//仙剑四项目
 	pal4:=router.Group("/pal4")
 	{  //除最后拾取与找寻物品的两个接口外，其余均只用一个type参数即可
-		pal4.POST("/equipment", equipment) 
+		pal4.POST("/equipment", equipment)
 		//pal4.POST("/property", property)
         //pal4.POST("/prescription", prescription)
         //pal4.POST("/question", question)
