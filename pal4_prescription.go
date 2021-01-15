@@ -10,11 +10,20 @@ import (
     "time"
 )
 type Prescription struct {
-    Id              int                 //物品ID
-    Name,Description,Attribute  string  //名称、描述说明、属性说明（对应PRA_PROPERTY）
-    ProductId,NeedPotential,NeedLing int    //合成物品ID、潜力需求量、灵容量需求量
-    Skill,Price int //技能ID、价格
-    Effect1,Effect2,Effect3,Effect,BuyScene string //粒子特效剑、双剑、琴、粒子特效组合、购买场景
+    Id       int     `json:"id"`
+	Name string   `json:"name"`
+	Description string   `json:"description"`
+	Attribute  string  `json:"attribute,omitempty"`
+	ProductId int   `json:"attribute,omitempty"`
+	NeedPotential int   `json:"attribute,omitempty"`
+	NeedLing int  `json:"attribute,omitempty"`
+	Skill int   `json:"attribute,omitempty"`
+	Price int `json:"attribute,omitempty"`
+	Effect1 string    `json:"attribute,omitempty"`
+	Effect2 string   `json:"attribute,omitempty"`
+	Effect3 string   `json:"attribute,omitempty"`
+	Effect string   `json:"attribute,omitempty"`
+	BuyScene string //粒子特效剑、双剑、琴、粒子特效组合、购买场景
     EaUrl string
 }
 func prescription(c *gin.Context) {
@@ -22,6 +31,7 @@ func prescription(c *gin.Context) {
         prescriptions []Prescription
 		pt PropType
 		err error
+		prescriptionSql string
 	)
 	if err = c.ShouldBindJSON(&pt); err != nil {    
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -34,18 +44,9 @@ func prescription(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK,equips)
         return
     }
-    switch pt.Class {
-    case "熔铸图谱":
-        prescriptions.IsRZ=true
-    case "锻造图谱":
-        prescriptions.IsDY,prescriptions.IsNotRZ=true,true
-    case "注灵图谱":
-        prescriptions.IsZL,prescriptions.IsNotRZ=true,true
-    }
-    prescriptionList:=[]Prescription{}
-    prescriptionSql:=""
-    typeId:=getId("PrescriptionType",prescriptionType[0])
-    if prescriptionType[0]=="熔铸图谱" {
+    
+    typeId:=getId("PrescriptionType",pt.Class)
+    if pt.Class=="熔铸图谱" {
         equipTypeId:=getId("EquipType",prescriptionType[1])
         prescriptionSql=fmt.Sprintf(`
             select pra.id,pra.name,pra.description,attribute,product_id,need_potential,need_ling,pra.skill_id,pra.price,pra.ef2,pra.ef3,ef4 
