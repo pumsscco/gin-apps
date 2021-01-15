@@ -30,9 +30,31 @@ func property(c *gin.Context) {
         properties []Property
         pt PropType
         err error
+        validProp=map[string]string{
+            "食物":"恢复",
+            "其它恢复类":"恢复",
+            "攻击类":"攻击",
+            "香料":"辅助",
+            "其它辅助类":"辅助",
+            "矿石":"材料",
+            "尸块":"材料",
+            "其它材料":"材料",
+            "剧情类":"剧情",
+        }
+        valid bool
     )
 	if err = c.ShouldBindJSON(&pt); err != nil {    
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    for k,v:=range validProp {
+        if pt.Class==v && pt.Type==k {
+            valid=true
+            break
+        }
+    }
+    if !valid {
+        c.IndentedJSON(http.StatusNotAcceptable, gin.H{"error": "非法参数"})
         return
     }
     k:=fmt.Sprintf("pal4:property:%s:%s",pt.Class,pt.Type)

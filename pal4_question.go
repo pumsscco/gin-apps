@@ -43,7 +43,10 @@ func question(c *gin.Context) {
     questionSql:=`
         select question,answer1,answer2,answer3,right_answer from GameQuestion where db=?
     `
-    rows,_ := Db.Query(questionSql,db)
+    rows,err := Db.Query(questionSql,db)
+    if err!=nil {
+        
+    }
     for rows.Next() {
         qu := Question{}
         rows.Scan(

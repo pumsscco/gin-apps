@@ -9,11 +9,8 @@
 
 目前从原项目中搬了些代码来，应该有所帮助
 
+## 异常处理
+为了快速完成全部功能的编写，忽视了许多的异常的处理
 
-
-user.name=Pluto Chan
-user.email=pumsscco@163.com
-core.editor=vim
-log.date=iso
-push.default=simple
-alias.lg=log --color --pretty=format:'%C(bold blue)%h%Creset %C(bold green)[%cd] %C(bold yellow)%an %C(bold red)%s%Creset' --date=format:'%Y-%m-%d %H:%M:%S' --abbrev-commit
+* 部分不能完全由数据库字段来直接进行判定的，多字段组合的，使用映射模式来检测数据有效性
+* 其余可以用数据库来的，直接通过数据库的查询结果，如果**结果集为空或出错，均禁止缓存数据**

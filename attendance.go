@@ -16,7 +16,7 @@ type Attendance struct {
     Comments    string `json:"comments"`
 }
 type Duration struct {
-	Name string  `json: "name" binding:"required"` 
+	Name string  `json:"name" binding:"required"` 
 }
 //抓记录
 func rec(c *gin.Context) {

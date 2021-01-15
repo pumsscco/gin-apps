@@ -120,9 +120,9 @@ func equipment(c *gin.Context) {
             t:=fv.Type()
             if t.String()=="int" && fv.Int()>0 {
                 if f[1]=="灵蕴" || f[1]=="潜力" {
-                    equip.Attribute+=fmt.Sprintf("%s:%d ",f[1],fv)
+                    equip.Attribute+=fmt.Sprintf("%s:%d ",f[1],fv.Int())
                 } else {
-                    equip.Attribute+=fmt.Sprintf("%s+%d ",f[1],fv)
+                    equip.Attribute+=fmt.Sprintf("%s+%d ",f[1],fv.Int())
                 }
             } else if t.String()=="float32" && fv.Float()>0 {
                 equip.Attribute+=fmt.Sprintf("%s+%s%% ",f[1],perDisp(float32(fv.Float()*100)))

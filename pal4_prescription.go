@@ -13,11 +13,11 @@ type Prescription struct {
 	Name string   `json:"name"`
 	Description string   `json:"description"`
 	Attribute  string  `json:"attribute,omitempty"`
-	ProductId int   `json:"attribute,omitempty"`
-	NeedPotential int   `json:"attribute,omitempty"`
-	NeedLing int  `json:"attribute,omitempty"`
-	Skill int   `json:"attribute,omitempty"`
-	Price int `json:"attribute,omitempty"`
+	ProductId int   `json:"product_id,omitempty"`
+	NeedPotential int   `json:"need_potential,omitempty"`
+	NeedLing int  `json:"need_ling,omitempty"`
+	Skill int   `json:"skill,omitempty"`
+	Price int `json:"price,omitempty"`
 	Effect1 string    `json:"-"`
 	Effect2 string   `json:"-"`
 	Effect3 string   `json:"-"`
@@ -29,10 +29,31 @@ func prescription(c *gin.Context) {
         prescriptions []Prescription
 		pt PropType
 		err error
-		prescriptionSql string
-	)
+        prescriptionSql string
+        validPres=map[string]string{
+            "剑":"熔铸图谱",
+            "双剑":"熔铸图谱",
+            "琴":"熔铸图谱",
+            "头部防具":"熔铸图谱",
+            "身体防具":"熔铸图谱",
+            "足部防具":"熔铸图谱",
+            "锻冶":"锻造图谱",
+            "注灵":"注灵图谱",
+        }
+        valid bool
+    )
 	if err = c.ShouldBindJSON(&pt); err != nil {    
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    for k,v:=range validPres {
+        if pt.Class==v && pt.Type==k {
+            valid=true
+            break
+        }
+    }
+    if !valid {
+        c.IndentedJSON(http.StatusNotAcceptable, gin.H{"error": "非法参数"})
         return
     }
     k:=fmt.Sprintf("pal4:prescription:%s:%s",pt.Class,pt.Type)
