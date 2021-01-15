@@ -69,7 +69,11 @@ func getName(table string, id int) (name string) {
 }
 func getId(table, name string) (id int) {
 	sql := fmt.Sprintf(`select id from %s where name="%s"`, table, name)
-	Db.QueryRow(sql).Scan(&id)
+	err:=Db.QueryRow(sql).Scan(&id)
+    if err!=nil {
+		logger.Printf("id not found: %v\n",err)
+		id=-1
+    }
 	return
 }
 //获取购买场景
