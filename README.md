@@ -8,3 +8,12 @@
 * 第二层为具体行为，使用大量的参数，达成区分具体功能的需求
 
 目前从原项目中搬了些代码来，应该有所帮助
+
+
+
+user.name=Pluto Chan
+user.email=pumsscco@163.com
+core.editor=vim
+log.date=iso
+push.default=simple
+alias.lg=log --color --pretty=format:'%C(bold blue)%h%Creset %C(bold green)[%cd] %C(bold yellow)%an %C(bold red)%s%Creset' --date=format:'%Y-%m-%d %H:%M:%S' --abbrev-commit
