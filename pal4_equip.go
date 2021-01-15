@@ -19,50 +19,52 @@ type Equip struct {
 	Texture     string   `json:"texture,omitempty"`
 	LvLmt int   `json:"level_limit,omitempty"`
 	Price int   `json:"price,omitempty"`
-	LingCap          int        `json:"ling_capacity,omitempty"`
-	Potential int   `json:"potential,omitempty"`
-	MaxHP int   `json:"max_hp,omitempty"`
-	AdditionalRage int `json:"additional_rage,omitempty"`
-	MaxMP int   `json:"max_mp,omitempty"`
-	Physical int  `json:"physical,omitempty"`
-	Toughness int  `json:"toughness,omitempty"`
-	Speed int  `json:"speed,omitempty"`
-	Lucky int   `json:"lucky,omitempty"`
-	Will int `json:"will,omitempty"`
-	Water int  `json:"water,omitempty"`
-	Fire int  `json:"fire,omitempty"`
-	Thunder int  `json:"thunder,omitempty"`
-	Air int  `json:"air,omitempty"`
-	Earth int         `json:"earth,omitempty"`
-	WaterAdditional int  `json:"water_additional,omitempty"`
-	FireAdditional int  `json:"fire_additional,omitempty"`
-	ThunderAdditional int  `json:"thunder_additional,omitempty"`
-	AirAdditional int   `json:"air_additional,omitempty"`
-	EarthAdditional int `json:"earth_additional,omitempty"`
-	PhysicalExtract float32   `json:"physical_extract,omitempty"`
-	WaterExtract float32  `json:"water_extract,omitempty"`
-	FireExtract float32   `json:"fire_extract,omitempty"`
-	ThunderExtract float32   `json:"thunder_extract,omitempty"`
-	AirExtract float32   `json:"air_extract,omitempty"`
-	EarthExtract float32   `json:"earth_extract,omitempty"`
-	PhysicalReact float32   `json:"physical_react,omitempty"`
-	WaterReact float32   `json:"water_react,omitempty"`
-	FireReact float32  `json:"fire_react,omitempty"`
-	ThunderReact float32  `json:"thunder_react,omitempty"`
-	AirReact float32  `json:"air_react,omitempty"`
-	EarthReact float32 `json:"earth_react,omitempty"`
-	AdditionalCritical float32   `json:"additional_critical,omitempty"`
-	FendOff float32   `json:"fend_off,omitempty"`
-	AdditionalHitting float32   `json:"additional_hitting,omitempty"`
+	LingCap          int        `json:"-"`
+	Potential int   `json:"-"`
+	MaxHP int   `json:"-"`
+	AdditionalRage int `json:"-"`
+	MaxMP int   `json:"-"`
+	Physical int  `json:"-"`
+	Toughness int  `json:"-"`
+	Speed int  `json:"-"`
+	Lucky int   `json:"-"`
+	Will int `json:"-"`
+	Water int  `json:"-"`
+	Fire int  `json:"-"`
+	Thunder int  `json:"-"`
+	Air int  `json:"-"`
+	Earth int         `json:"-"`
+	WaterAdditional int  `json:"-"`
+	FireAdditional int  `json:"-"`
+	ThunderAdditional int  `json:"-"`
+	AirAdditional int   `json:"-"`
+	EarthAdditional int `json:"-"`
+	PhysicalExtract float32   `json:"-"`
+	WaterExtract float32  `json:"-"`
+	FireExtract float32   `json:"-"`
+	ThunderExtract float32   `json:"-"`
+	AirExtract float32   `json:"-"`
+	EarthExtract float32   `json:"-"`
+	PhysicalReact float32   `json:"-"`
+	WaterReact float32   `json:"-"`
+	FireReact float32  `json:"-"`
+	ThunderReact float32  `json:"-"`
+	AirReact float32  `json:"-"`
+	EarthReact float32 `json:"-"`
+	AdditionalCritical float32   `json:"-"`
+	FendOff float32   `json:"-"`
+	AdditionalHitting float32   `json:"-"`
     Effect1 string   `json:"effect1,omitempty"`
     BuyScene string    `json:"buy_scene,omitempty"`
 }
 
 //依据装备类型的中文名，获得该类物品的全部属性
 func equipment(c *gin.Context) {
-    var equips []Equip
-    var et Type
-    var err error
+    var (
+        equips []Equip
+        et Type
+        err error
+    )
 	if err = c.ShouldBindJSON(&et); err != nil {    
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
@@ -89,7 +91,6 @@ func equipment(c *gin.Context) {
     }
     typeId:=getId("EquipType",et.Type)
     //利用类型ID取原始数据
-    equipList:=[]Equip{}
     equipSql:=`
         select id,name,description,model,texture,tianhe_lv_lmt|lingsha_lv_lmt|mengli_lv_lmt|ziying_lv_lmt lvl_lmt,price,
         ling_capacity,forge_potential,max_hp,additional_rage,max_mp,physical,toughness,speed,lucky,will,water,fire,

@@ -7,12 +7,12 @@ import (
     "time"
 )
 
-type Mission struct {
+type CMission struct {
     Id int `json:"id"`
     Content string  `json:"content"`
 }
-func mission(c *gin.Context)  {
-	var missions []Mission
+func cMission(c *gin.Context)  {
+	var missions []CMission
 	k:="crh:mission"
     val,err:=client.Get(k).Result()
     if err==nil {
@@ -23,7 +23,7 @@ func mission(c *gin.Context)  {
     sql:=`select id,content from SPMission where content!=""`
     rows,_ := Db.Query(sql)
     for rows.Next() {
-        m := Mission{}
+        m := CMission{}
         rows.Scan(&m.Id,&m.Content)
         missions = append(missions, m)
     }
