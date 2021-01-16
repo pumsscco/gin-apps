@@ -91,9 +91,9 @@ func main() {
         pal4.POST("/question", question)
         pal4.POST("/mission", pMission)
         pal4.POST("/magic", magic)
-        //pal4.POST("/stunt", stunt)
-        //pal4.POST("/upgrade", upgrade)
-        //pal4.POST("/enemy", enemy)
+        pal4.POST("/stunt", stunt)
+        pal4.POST("/upgrade", upgrade)
+        pal4.POST("/enemy", enemy)
         //pal4.POST("/pick", pick)
         //pal4.POST("/find", find)
 	}

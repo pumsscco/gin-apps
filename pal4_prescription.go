@@ -53,7 +53,7 @@ func prescription(c *gin.Context) {
         }
     }
     if !valid {
-        c.IndentedJSON(http.StatusNotAcceptable, gin.H{"error": "非法参数"})
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "非法参数"})
         return
     }
     k:=fmt.Sprintf("pal4:prescription:%s:%s",pt.Class,pt.Type)
@@ -77,11 +77,7 @@ func prescription(c *gin.Context) {
         `
 	}
 	logger.Printf("prescriptionSql: %v; typeId: %v\n",prescriptionSql,typeId)
-	rows,err := Db.Query(prescriptionSql,typeId)
-	if err!=nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return	
-	}
+	rows,_ := Db.Query(prescriptionSql,typeId)
     for rows.Next() {
         pres := Prescription{}
         rows.Scan(

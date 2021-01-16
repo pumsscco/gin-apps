@@ -39,14 +39,14 @@ func question(c *gin.Context) {
         db=2
     case "仙剑世界":
         db=3
+    default:
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，禁止查找！"})
+        return
     }
     questionSql:=`
         select question,answer1,answer2,answer3,right_answer from GameQuestion where db=?
     `
-    rows,err := Db.Query(questionSql,db)
-    if err!=nil {
-        
-    }
+    rows,_ := Db.Query(questionSql,db)
     for rows.Next() {
         qu := Question{}
         rows.Scan(
@@ -54,7 +54,7 @@ func question(c *gin.Context) {
         )
         questions = append(questions, qu)
     }
-	rows.Close()
+    rows.Close()
 	s,err:=json.Marshal(questions)
 	if err!=nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

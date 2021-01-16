@@ -42,6 +42,9 @@ func pMission(c *gin.Context) {
         pattern=" depended_id between 200 and 299"
     case "支线":
         pattern=" depended_id>=300"
+    default:
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，禁止查找！"})
+        return
     }
     missionSql:=fmt.Sprintf(`
         select trunk,quest_id,name,picture,description,story_per,story_show from Mission where %s
@@ -60,7 +63,11 @@ func pMission(c *gin.Context) {
         }
         missions = append(missions, mi)
     }
-	rows.Close()
+    rows.Close()
+    if len(missions)==0 {
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，什么也查不到！"})
+        return
+    }
 	s,err:=json.Marshal(missions)
 	if err!=nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

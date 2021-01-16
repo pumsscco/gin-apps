@@ -54,7 +54,7 @@ func property(c *gin.Context) {
         }
     }
     if !valid {
-        c.IndentedJSON(http.StatusNotAcceptable, gin.H{"error": "非法参数"})
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "非法参数"})
         return
     }
     k:=fmt.Sprintf("pal4:property:%s:%s",pt.Class,pt.Type)

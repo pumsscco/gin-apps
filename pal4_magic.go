@@ -48,6 +48,9 @@ func magic(c *gin.Context) {
         propSelect=" attribute!=''"
     case "敌方":
         propSelect=" attribute=''"
+    default:
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，禁止查找！"})
+        return
     }
     magicSql:=fmt.Sprintf(`
         select id,name,description,attribute,ai_cmd_type,target,wuling,attached_skill,consumed_mp,
@@ -66,7 +69,11 @@ func magic(c *gin.Context) {
         magic.WulingName=getName("WuLing",magic.Wuling)
         magics = append(magics, magic)
     }
-	rows.Close()
+    rows.Close()
+    if len(magics)==0 {
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，什么也查不到！"})
+        return
+    }
 	s,err:=json.Marshal(magics)
 	if err!=nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

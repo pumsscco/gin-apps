@@ -99,7 +99,6 @@ func equipment(c *gin.Context) {
         water_react,fire_react,thunder_react,air_react,earth_react,additional_critical,fend_off,additional_hitting,ef1 
         from Equip where type=?
     `
-    //rows,_ := Db.Query(equipSql,typeId)
     rows,_ := Db.Query(equipSql,typeId)
     for rows.Next() {
         equip := Equip{}
@@ -138,6 +137,10 @@ func equipment(c *gin.Context) {
         equips = append(equips, equip)
     }
     rows.Close()
+    if len(equips)==0 {
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，什么也查不到！"})
+        return
+    }
 	s,err:=json.Marshal(equips)
 	if err!=nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
