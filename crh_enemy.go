@@ -38,10 +38,12 @@ type Enemy struct {
 	Fighter4Lvl int    `json:"-"`
 }
 
-func enemy(c *gin.Context) {
-	var et Type
-	var enemys []Enemy
-	var err error
+func cEnemy(c *gin.Context) {
+	var (
+		et Type
+		enemys []Enemy
+		err error
+	)
 	if err = c.ShouldBindJSON(&et); err != nil {    
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return

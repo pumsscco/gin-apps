@@ -10,7 +10,7 @@ import (
 type Stunt struct {
     Id int 				`json:"id"`
 	Name 		string 		`json:"name"`
-	Description string     `json:"description"`
+	Description string     `json:"description,omitempty"`
 	Attribute  string   `json:"attribute,omitempty"`
 	AiCmdType int   `json:"-"`
 	Target int    `json:"-"`

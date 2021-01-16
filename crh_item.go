@@ -11,7 +11,7 @@ import (
 )
 
 //两张物品表的合并结构，加上少量额外的字段，用于存储解析出来的数据
-type Item struct {
+type CItem struct {
 	Id  int  		`json:"id"`
 	Name string `json:"name"`
 	Description string  `json:"description"`
@@ -32,9 +32,11 @@ type Item struct {
 }
 
 func item(c *gin.Context) {
-	var it Type
-	var items []Item
-	var err error
+	var (
+		it Type
+		items []CItem
+		err error
+	)
 	if err = c.ShouldBindJSON(&it); err != nil {    
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
@@ -67,7 +69,7 @@ func item(c *gin.Context) {
 	}
 	rows, _ := Db.Query(sql, typeMap[it.Type])
 	for rows.Next() {
-		i := Item{}
+		i := CItem{}
 		rows.Scan(
 			&i.Id, &i.Name, &i.Strength, &i.Accuracy, &i.CritRate, &i.Defence, &i.Agility, &i.Quick,
 			&i.Intelligence, &i.MP, &i.Price, &i.RoleFlag, &i.Func, &i.FuncParam,

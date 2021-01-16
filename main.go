@@ -78,7 +78,7 @@ func main() {
 		crh.POST("/combo", combo)
 		crh.POST("/fighter", fighter)
 		crh.POST("/item", item)
-        crh.POST("/enemy", enemy)
+        crh.POST("/enemy", cEnemy)
         crh.POST("/mission", cMission)
         crh.POST("/role", role)
 	}
@@ -93,9 +93,11 @@ func main() {
         pal4.POST("/magic", magic)
         pal4.POST("/stunt", stunt)
         pal4.POST("/upgrade", upgrade)
-        pal4.POST("/enemy", enemy)
-        //pal4.POST("/pick", pick)
-        //pal4.POST("/find", find)
+        pal4.POST("/enemy", pEnemy)
+        pal4.POST("/pickup", pickup)
+        pal4.POST("/scene", scene)
+        pal4.POST("/thing", thing)
+        pal4.POST("/find", find)
 	}
 	/*股票项目
 	stock:=router.Group("/stock")
