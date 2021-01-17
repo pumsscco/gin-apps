@@ -20,7 +20,7 @@ type PMission struct {
 func pMission(c *gin.Context) {
 	var (
         missions []PMission
-        mt Type
+        mt OneParam
 		err error
 		pattern string
 	)

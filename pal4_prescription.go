@@ -27,7 +27,7 @@ type Prescription struct {
 func prescription(c *gin.Context) {
 	var (
         prescriptions []Prescription
-		pt PropType
+		pt TwoParam
 		err error
         prescriptionSql string
         validPres=map[string]string{

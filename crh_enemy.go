@@ -40,7 +40,7 @@ type Enemy struct {
 
 func cEnemy(c *gin.Context) {
 	var (
-		et Type
+		et OneParam
 		enemys []Enemy
 		err error
 	)

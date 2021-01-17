@@ -43,7 +43,7 @@ type PItem struct {
 func pickup(c *gin.Context) {
     var (
         pItems []PItem
-        ss PropType     // scene and section
+        ss TwoParam     // scene and section
         err error
     )
     if err = c.ShouldBindJSON(&ss); err != nil {    

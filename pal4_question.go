@@ -17,7 +17,7 @@ type Question struct {
 func question(c *gin.Context) {
     var (
         questions []Question
-        qt Type
+        qt OneParam
 		err error
 		db int
     )

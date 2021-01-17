@@ -62,7 +62,7 @@ type Equip struct {
 func equipment(c *gin.Context) {
     var (
         equips []Equip
-        et Type
+        et OneParam
         err error
     )
 	if err = c.ShouldBindJSON(&et); err != nil {    

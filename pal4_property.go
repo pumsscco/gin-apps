@@ -20,15 +20,12 @@ type Property struct {
 	AttachedSkill          int    `json:"attached_skill,omitempty"`
     BuyScene string `json:"buy_scene,omitempty"`
 }
-type PropType struct {
-	Class string `json:"class" binding:"required"`
-	Type string `json:"type" binding:"required"`
-}
+
 //依据装备类型的中文名，获得该类物品的全部属性
 func property(c *gin.Context) {
 	var (
         properties []Property
-        pt PropType
+        pt TwoParam
         err error
         validProp=map[string]string{
             "食物":"恢复",

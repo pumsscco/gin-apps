@@ -20,7 +20,7 @@ type Scene struct {
 func scene(c *gin.Context) {
 	var (
         scenes []Scene
-        st Type
+        st OneParam
 		err error
 		sql string
     )

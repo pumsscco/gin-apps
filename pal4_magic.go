@@ -28,7 +28,7 @@ type Magic struct {
 func magic(c *gin.Context) {
 	var (
         magics []Magic
-        mt Type
+        mt OneParam
 		err error
 		propSelect string
 	)

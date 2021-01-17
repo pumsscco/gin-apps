@@ -10,10 +10,11 @@ import (
 func thing(c *gin.Context) {
     var (
         things []string
-        tht PropType
+        tht ThreeParam
         err error
+        sql string
     )
-    sql:=""
+    
     switch cat {
     case "ea":
         eaType:=getId("EquipType",routeMapEquip[thingType])

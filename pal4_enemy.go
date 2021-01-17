@@ -122,7 +122,7 @@ func pEnemy(c *gin.Context) {
 		ers []EnemyResistance
 		ess []EnemySkill
 		eds []EnemyDrop
-        et Type
+        et OneParam
 		err error
 		enemys interface{}
 	)

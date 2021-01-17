@@ -33,7 +33,7 @@ type CItem struct {
 
 func item(c *gin.Context) {
 	var (
-		it Type
+		it OneParam
 		items []CItem
 		err error
 	)

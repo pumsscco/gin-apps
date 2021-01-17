@@ -24,7 +24,7 @@ type Upgrade struct {
 func upgrade(c *gin.Context) {
 	var (
         upgrades []Upgrade
-        role Type
+        role OneParam
 		err error
 	)
 	if err = c.ShouldBindJSON(&role); err != nil {    

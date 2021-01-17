@@ -32,7 +32,7 @@ type Stunt struct {
 func stunt(c *gin.Context) {
 	var (
         stunts []Stunt
-        stt Type
+        stt OneParam
 		err error
 		propSelect string
 	)

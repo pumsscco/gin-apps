@@ -4,8 +4,17 @@ import (
 	"fmt"
 	"strings"
 )
-type Type struct {
+type OneParam struct {
 	Type string `json:"type" binding:"required"`
+}
+type TwoParam struct {
+	Class string `json:"class" binding:"required"`
+	Type string `json:"type" binding:"required"`
+}
+type ThreeParam struct {
+	Class string `json:"class" binding:"required"`
+	Type string `json:"type" binding:"required"`
+	SubType string `json:"sub_type" binding:"required"`
 }
 //角色信息组合
 type Role struct {
