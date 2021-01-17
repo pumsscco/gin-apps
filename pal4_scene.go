@@ -8,14 +8,14 @@ import (
     "time"
 )
 type Scene struct {
-	Id int
-	Scene string
-	Section string
-	Name string
-	Type int
-	TypeName string
-	EarthBall int
-	IsEarthBall string
+	Id int  `json:"id"`
+	Scene string  `json:"scene"`
+	Section string   `json:"section"`
+	Name string  `json:"name"`
+	Type int   `json:"-"`
+	TypeName string  `json:"type_name"`
+	EarthBall int  `json:"-"`
+	IsEarthBall string  `json:"is_earthball"`
 }
 func scene(c *gin.Context) {
 	var (

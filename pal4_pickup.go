@@ -6,98 +6,132 @@ import (
     "github.com/gin-gonic/gin"
     "net/http"
     "time"
+    "reflect"
 )
 type PItem struct {
-    Section,ItemId,Model,Texture  string //区块编号、物品ID、模型、贴图
-    SectionName,Apperance,Outer string //外观，依据模型与贴图分析面得，含室外区域
-    CoorX,CoorY,CoorZ float32 //东西坐标、上下坐标、南北坐标
-    EquipId,PropertyId,ItemNum int  //装备ID、道具ID、前两项之一的数量
-    EquipName,PropertyName string //上项ID所对应名称
-    Money   int //钱数量
-    Item1Id,Item1Num,Item2Id,Item2Num,Item3Id,Item3Num int 
-    Item4Id,Item4Num,Item5Id,Item5Num,Item6Id,Item6Num int
-    ItemMoney int
-    ItemAll string //把物品全部组合在一起
+    ItemId string  `json:"item_id"`
+    Model string   `json:"model,omitempty"`
+    Texture  string   `json:"texture"`
+    SectionName string  `json:"section_name"`
+    Apperance string  `json:"apperance"`
+    Outer string `json:"outer,omitempty"`
+    CoorX float32   `json:"coor_x"`
+    CoorY float32  `json:"coor_y"`
+    CoorZ float32 `json:"coor_z"`
+    EquipId int  `json:"-"`
+    PropertyId int   `json:"-"`
+    ItemNum int  `json:"-"`
+    EquipName string  `json:"-"`
+    PropertyName string `json:"-"`
+    Money   int `json:"-"`
+    Item1Id int   `json:"-"`
+    Item1Num int  `json:"-"`
+    Item2Id int  `json:"-"`
+    Item2Num int   `json:"-"`
+    Item3Id int    `json:"-"`
+    Item3Num int   `json:"-"`
+    Item4Id int  `json:"-"`
+    Item4Num int   `json:"-"`
+    Item5Id int   `json:"-"`
+    Item5Num int   `json:"-"`
+    Item6Id int   `json:"-"`
+    Item6Num int   `json:"-"`
+    ItemMoney int   `json:"-"`
+    ItemAll string `json:"item_all,omitempty"`
 }
-//依据场景的中文名，找出此场景可拾取的全部物品
+
 func pickup(c *gin.Context) {
-    hasOuter:=false
-    sceneId:=getSceneId(scene)
+    var (
+        pItems []PItem
+        ss PropType     // scene and section
+        err error
+    )
+    if err = c.ShouldBindJSON(&ss); err != nil {    
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    k:=fmt.Sprintf("pal4:pickup:%s:%s",ss.Class,ss.Type)
+    val,err:=client.Get(k).Result()
+    if err==nil {
+		json.Unmarshal([]byte(val),&pItems)
+		c.IndentedJSON(http.StatusOK,pItems)
+        return
+    }
     sql:=`
-        select section,item_id,model,texture,coor_x,coor_y,coor_z,equip_id,property_id,item_num,money,item1id,
+        select item_id,model,texture,coor_x,coor_y,coor_z,equip_id,property_id,item_num,money,item1id,
         item1num,item2id,item2num,item3id,item3num,item4id,item4num,item5id,item5num,item6id,item6num,item_money 
-        from SceneItem where scene=?
+        from SceneItem where scene=? and section=?
     `
-    itemList:=[]Item{}
-    rows,_ := Db.Query(sql,sceneId)
+    rows,_ := Db.Query(sql,ss.Class,ss.Type)
     for rows.Next() {
-        item:=Item{}
+        it:=PItem{}
         rows.Scan(
-            &item.Section,&item.ItemId,&item.Model,&item.Texture,
-            &item.CoorX,&item.CoorY,&item.CoorZ,&item.EquipId,&item.PropertyId,
-            &item.ItemNum,&item.Money,&item.Item1Id,&item.Item1Num,
-            &item.Item2Id,&item.Item2Num,&item.Item3Id,&item.Item3Num,
-            &item.Item4Id,&item.Item4Num,&item.Item5Id,&item.Item5Num,
-            &item.Item6Id,&item.Item6Num,&item.ItemMoney,
+            &it.ItemId,&it.Model,&it.Texture,
+            &it.CoorX,&it.CoorY,&it.CoorZ,&it.EquipId,&it.PropertyId,
+            &it.ItemNum,&it.Money,&it.Item1Id,&it.Item1Num,
+            &it.Item2Id,&it.Item2Num,&it.Item3Id,&it.Item3Num,
+            &it.Item4Id,&it.Item4Num,&it.Item5Id,&it.Item5Num,
+            &it.Item6Id,&it.Item6Num,&it.ItemMoney,
         )
-        item.SectionName=getSectionName(sceneId,item.Section)
-        item.Apperance=getApperance(item.Model)
+        it.SectionName=getSectionName(ss.Class,ss.Type)
+        it.Apperance=getApperance(it.Model)
         switch {
-        case item.EquipId!=0:
-                item.EquipName=getName("Equip",item.EquipId)
-                if item.ItemNum>1 {
-                    item.ItemAll+=fmt.Sprintf("%s*%d ",item.EquipName,item.ItemNum)
-                } else if item.ItemNum==1 {
-                    item.ItemAll+=fmt.Sprintf("%s ",item.EquipName)
+        case it.EquipId!=0:
+                it.EquipName=getName("Equip",it.EquipId)
+                if it.ItemNum>1 {
+                    it.ItemAll+=fmt.Sprintf("%s*%d ",it.EquipName,it.ItemNum)
+                } else if it.ItemNum==1 {
+                    it.ItemAll+=fmt.Sprintf("%s ",it.EquipName)
                 }
-        case item.PropertyId!=0:
-                item.PropertyName=getName("Property",item.PropertyId)
-                if item.ItemNum>1 {
-                    item.ItemAll+=fmt.Sprintf("%s*%d ",item.PropertyName,item.ItemNum)
-                } else if item.ItemNum==1 {
-                    item.ItemAll+=fmt.Sprintf("%s ",item.PropertyName)
+        case it.PropertyId!=0:
+                it.PropertyName=getName("Property",it.PropertyId)
+                if it.ItemNum>1 {
+                    it.ItemAll+=fmt.Sprintf("%s*%d ",it.PropertyName,it.ItemNum)
+                } else if it.ItemNum==1 {
+                    it.ItemAll+=fmt.Sprintf("%s ",it.PropertyName)
                 }
-        case item.Money!=0:
-                item.ItemAll+=fmt.Sprintf("金钱*%d ",item.Money)
+        case it.Money!=0:
+                it.ItemAll+=fmt.Sprintf("金钱*%d ",it.Money)
         }
         //只有在非单独的装备、道具或是钱时，并且物品数量不为0时，才可能是宝箱类
-        if item.EquipId==0 && item.PropertyId==0 && item.Money==0 && item.ItemNum==0 {
-            v:=reflect.ValueOf(item)
+        if it.EquipId==0 && it.PropertyId==0 && it.Money==0 && it.ItemNum==0 {
+            v:=reflect.ValueOf(it)
             for i:=1;i<=6;i++ {
                 f:=fmt.Sprintf("Item%dId",i)
                 if fv:=v.FieldByName(f); fv.Int()>0 {
                     //先查道具，再查装备
-                    itemName:=getName("Property",int(fv.Int()))
-                    if itemName=="" {
-                        itemName=getName("Equip",int(fv.Int()))
+                    itName:=getName("Property",int(fv.Int()))
+                    if itName=="" {
+                        itName=getName("Equip",int(fv.Int()))
                     }
-                    if itemName!="" {
+                    if itName!="" {
                         fn:=fmt.Sprintf("Item%dNum",i)
                         fvn:=v.FieldByName(fn).Int()
                         if fvn>1 {
-                            item.ItemAll+=fmt.Sprintf("%s*%d ",itemName,fvn)
+                            it.ItemAll+=fmt.Sprintf("%s*%d ",itName,fvn)
                         } else if fvn==1 {
-                            item.ItemAll+=fmt.Sprintf("%s ",itemName)
+                            it.ItemAll+=fmt.Sprintf("%s ",itName)
                         }
                     }
                 }
             }
         }
-        item.Outer=getOuter(sceneId,item.Section)  
-        if item.Outer!="" {
-            hasOuter=true
-        }
-        if item.SectionName!="" {
-            itemList = append(itemList,item)
+        it.Outer=getOuter(ss.Class,ss.Type)
+        if it.SectionName!="" {
+            pItems = append(pItems,it)
         }
     }
     rows.Close()
-    if strings.HasPrefix(sceneId,"M") {
-        items.HasOuter=false
-    } else {
-        items.HasOuter=hasOuter
+    if len(pItems)==0 {
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，什么也查不到！"})
+        return
     }
-    items.ItemList=itemList
-    items.Scene=scene
-    return
+	s,err:=json.Marshal(pItems)
+	if err!=nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else {
+		client.Set(k, string(s), 36*time.Hour)
+		c.IndentedJSON(http.StatusOK,pItems)
+	}
 }

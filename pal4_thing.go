@@ -7,11 +7,12 @@ import (
     "net/http"
     "time"
 )
-type Things struct {
-    Cat,Type   string  //物品的大类与细类
-    ThingList []string   //物品列表
-}
 func thing(c *gin.Context) {
+    var (
+        things []string
+        tht PropType
+        err error
+    )
     sql:=""
     switch cat {
     case "ea":
