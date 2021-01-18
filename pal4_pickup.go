@@ -45,6 +45,7 @@ func pickup(c *gin.Context) {
         pItems []PItem
         ss TwoParam     // scene and section
         err error
+        id int
     )
     if err = c.ShouldBindJSON(&ss); err != nil {    
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -55,6 +56,12 @@ func pickup(c *gin.Context) {
     if err==nil {
 		json.Unmarshal([]byte(val),&pItems)
 		c.IndentedJSON(http.StatusOK,pItems)
+        return
+    }
+    chkSql:=`select id from Scene where scene=? and section=?`
+    err=Db.QueryRow(chkSql,ss.Class,ss.Type).Scan(&id)
+    if err!=nil {
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
     sql:=`
@@ -122,10 +129,6 @@ func pickup(c *gin.Context) {
         }
     }
     rows.Close()
-    if len(pItems)==0 {
-        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，什么也查不到！"})
-        return
-    }
 	s,err:=json.Marshal(pItems)
 	if err!=nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

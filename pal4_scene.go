@@ -37,9 +37,9 @@ func scene(c *gin.Context) {
 	}
 	switch st.Type {
 	case "迷宫":
-		sql=`select id,scene,section,name,type,earthball from SceneName where id regexp "^M"`
+		sql=`select id,scene,section,name,type,earthball from Scene where scene regexp "^M"`
 	case "城镇":
-		sql=`select id,scene,section,name,type,earthball from SceneName where id regexp "^Q"`
+		sql=`select id,scene,section,name,type,earthball from Scene where scene regexp "^Q"`
 	default:
         c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，禁止查找！"})
         return
