@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 type OneParam struct {
 	Type string `json:"type" binding:"required"`
@@ -331,3 +332,45 @@ func getCommission(openCondition, openNum int) (commission string) {
 	Db.QueryRow(commissionSql, openCondition, openNum).Scan(&commission)
 	return
 }
+
+//完整的交易记录结构
+
+//公共统计结构
+type Stats struct {
+	Code,Name string
+	FirstDealDay,LastDealDay,MaxBalanceDay time.Time
+	HoldDays,MaxBalance,TransactionCount int
+	//amount的总和，为正则是利润，为负则是成本
+	Amount,TransactionFreq  float32
+}
+//依据可能的条件，获得代码与最新名称的映射
+func getNameMap(cond string) map[string]string {
+	//先拿代码列表
+	sql:="select distinct code from stock "+cond
+	codes:=[]string{}
+	rows, _ := Db.Query(sql)
+	for rows.Next() {
+		c:=""
+		rows.Scan(&c)
+		codes = append(codes, c)
+	}
+	rows.Close()
+	//再拿最新名字列表
+	sql="select name from stock where code=? order by date desc"
+	names:=make(map[string]string)
+	for _,c:=range codes {
+		name:=""
+		Db.QueryRow(sql,c).Scan(&name)
+		names[c]=name
+	}
+	return names
+}
+type ByProfitReverse []Clear
+func (a ByProfitReverse) Len() int { return len(a) }
+func (a ByProfitReverse) Less(i, j int) bool { return a[i].Amount > a[j].Amount }
+func (a ByProfitReverse) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+type ByCost []Hold
+func (a ByCost) Len() int { return len(a) }
+func (a ByCost) Less(i, j int) bool { return a[i].Amount < a[j].Amount }
+func (a ByCost) Swap(i, j int) { a[i], a[j] = a[j], a[i] }

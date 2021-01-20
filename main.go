@@ -99,14 +99,14 @@ func main() {
         pal4.POST("/thing", thing)
         pal4.POST("/find", find)
 	}
-	/*股票项目
+	//股票项目
 	stock:=router.Group("/stock")
 	{
-		stock.POST("/list", nsList)
-		stock.POST("/detail", nsDetail)
-		stock.POST("/deploys", nsDeploys)
-		stock.POST("/svcs", nsSvcs)
-		stock.POST("/pods", nsPods)
-	}*/
+		stock.POST("/create", create)
+		stock.POST("/list", list)
+		stock.POST("/hold-last-deal", holdLastDeal)
+		stock.POST("/clearance", clearance)
+		stock.POST("/position", position)
+	}
 	router.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
