@@ -104,7 +104,8 @@ func main() {
 	{
 		stock.POST("/create", create)
 		stock.POST("/list", list)
-		stock.POST("/hold-last-deal", holdLastDeal)
+        stock.POST("/hold-last-deal", holdLastDeal)
+        stock.POST("/statistic", statistic)
 		stock.POST("/clearance", clearance)
 		stock.POST("/position", position)
 	}

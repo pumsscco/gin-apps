@@ -337,11 +337,17 @@ func getCommission(openCondition, openNum int) (commission string) {
 
 //公共统计结构
 type Stats struct {
-	Code,Name string
-	FirstDealDay,LastDealDay,MaxBalanceDay time.Time
-	HoldDays,MaxBalance,TransactionCount int
+	Code string `json:"code"`
+	Name string `json:"name"`
+	FirstDealDay time.Time  `json:"first_deal_day"`
+	LastDealDay time.Time  `json:"last_deal_day"`
+	MaxBalanceDay time.Time  `json:"max_balance_day"`
+	HoldDays int  `json:"hold_days"`
+	MaxBalance int  `json:"max_balance"`
+	TransactionCount int  `json:"transaction_count"`
 	//amount的总和，为正则是利润，为负则是成本
-	Amount,TransactionFreq  float32
+	Amount float32  `json:"amount"`
+	TransactionFreq  float32  `json:"transaction_frequence"`
 }
 //依据可能的条件，获得代码与最新名称的映射
 func getNameMap(cond string) map[string]string {

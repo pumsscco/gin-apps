@@ -1,22 +1,30 @@
 package main
 
 import (
-//	"fmt"
-//	"reflect"
-//	"net/http"
-//	"time"
+	"github.com/gin-gonic/gin"
 	"sort"
+	"fmt"
+	"encoding/json"
+	"net/http"
+	"time"
 )
 type Clear struct {
 	Stats
-	AvgDailyProfit float32
-}
-type Clears struct {
-	Profits float32
-	ClearList []Clear
+	AvgDailyProfit float32  `json:"average_daily_profit"`
 }
 //清仓类
-func getClearance()(clears Clears) {
+func clearance(c *gin.Context) {
+	var (
+        clears []Clear
+		err error
+	)
+	k:=fmt.Sprintf("stock:clearance")
+    val,err:=client.Get(k).Result()
+    if err==nil {
+		json.Unmarshal([]byte(val),&clears)
+		c.IndentedJSON(http.StatusOK,clears)
+        return
+    }
 	clearStocks:=getNameMap("group by code having sum(volume)=0")
 	for k,v:=range clearStocks {
 		clear:=Clear{}
@@ -37,23 +45,40 @@ func getClearance()(clears Clears) {
 		Db.QueryRow(sql,k,k).Scan(&clear.MaxBalanceDay,&clear.MaxBalance)
 		clear.Code=k
 		clear.Name=v
-		clears.Profits+=clear.Amount
-		clears.ClearList=append(clears.ClearList,clear)
+		clears=append(clears,clear)
 	}
-	sort.Sort(ByProfitReverse(clears.ClearList))
-	return
+	sort.Sort(ByProfitReverse(clears))
+	if len(clears)==0 {
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，什么也查不到！"})
+        return
+    }
+	s,err:=json.Marshal(clears)
+	if err!=nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else {
+		client.Set(k, string(s), 36*time.Hour)
+		c.IndentedJSON(http.StatusOK,clears)
+	}
 }
 type Hold struct {
 	Stats
-	Balance int
-	AvgCost float32
-}
-type Holds struct {
-	Costs float32
-	HoldList []Hold
+	Balance int `json:"Balance"`
+	AvgCost float32 `json:"average_cost"`
 }
 //持仓类
-func getPosition()(holds Holds) {
+func position(c *gin.Context) {
+	var (
+        holds []Hold
+		err error
+	)
+	k:=fmt.Sprintf("stock:position")
+    val,err:=client.Get(k).Result()
+    if err==nil {
+		json.Unmarshal([]byte(val),&holds)
+		c.IndentedJSON(http.StatusOK,holds)
+        return
+    }
 	holdStocks:=getNameMap("group by code having sum(volume)!=0")
 	for k,v:=range holdStocks {
 		hold:=Hold{}
@@ -76,9 +101,19 @@ func getPosition()(holds Holds) {
 		Db.QueryRow(sql,k,k).Scan(&hold.MaxBalanceDay,&hold.MaxBalance)
 		hold.Code=k
 		hold.Name=v
-		holds.Costs+=hold.Amount
-		holds.HoldList=append(holds.HoldList,hold)
+		holds=append(holds,hold)
 	}
-	sort.Sort(ByCost(holds.HoldList))
-	return
+	sort.Sort(ByCost(holds))
+	if len(holds)==0 {
+        c.IndentedJSON(http.StatusNotFound, gin.H{"error": "参数错误，什么也查不到！"})
+        return
+    }
+	s,err:=json.Marshal(holds)
+	if err!=nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else {
+		client.Set(k, string(s), 36*time.Hour)
+		c.IndentedJSON(http.StatusOK,holds)
+	}
 }

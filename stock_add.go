@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 	"math"
-	"strconv"
 	"unicode/utf8"
 	"fmt"
 )
@@ -60,7 +59,7 @@ func create(c *gin.Context) {
 	name := stockV.Name
 	operation := stockV.Operation
 	volume := stockV.Volume
-	//balance := stockV.Balance
+	balance := stockV.Balance
 	price  := stockV.Price
 	turnover:= stockV.Turnover
 	amount:= stockV.Amount
@@ -72,8 +71,8 @@ func create(c *gin.Context) {
 	if date.Before(first) || date.After(time.Now()) {
 		errors+="交易日期必须在2007年10月24日与今天之间\n"
 	}
-	if match, _ := regexp.MatchString(`(6|0|3)\d{5}`, code); !match {
-		errors+="股票代码必须为6位数字，且以6/0/3之一开头\n"
+	if match, _ := regexp.MatchString(`(6|0|3|1)\d{5}`, code); !match {
+		errors+="股票代码必须为6位数字，且以6/0/3/1之一开头\n"
 	}
 	if len(name)<7 && (len(name)-utf8.RuneCountInString(name)>=4) {
 		errors+="股票名称的长度不少于7，且中文不得少于2个（中文为3个字符）\n"
@@ -110,7 +109,7 @@ func create(c *gin.Context) {
 	//成交金额部分：如果为买卖，则成交金额为成交均价乘以成交数量的积的绝对值
 	switch operation {
 	case "证券买入","证券卖出","申购中签":
-		if turnover!=math.Abs(float64(price)*float64(volume)) {
+		if turnover!=float32(math.Abs(float64(price)*float64(volume))) {
 			errors+="成交金额计算错误，请自查\n"
 		}
 	case "股息入账","股息红利税补":
@@ -124,7 +123,7 @@ func create(c *gin.Context) {
 	}
 	//佣金计算
 	if operation=="证券买入" || operation=="证券卖出" {
-		if brokerage!=math.Max(math.Round(turnover*0.00025*100)/100,5) {
+		if brokerage!=float32(math.Max(math.Round(float64(turnover)*0.00025*100)/100,5)) {
 			errors+="佣金计算错误，请自查\n"
 		}
 	} else {
@@ -134,7 +133,7 @@ func create(c *gin.Context) {
 	}
 	//印花税计算
 	if operation=="证券卖出" {
-		if stamps!=math.Round(turnover/1000*100)/100 {
+		if stamps!=float32(math.Round(float64(turnover)/1000*100)/100) {
 			errors+="印花税计算错误，请自查\n"
 		}
 	} else {
@@ -179,7 +178,7 @@ func create(c *gin.Context) {
 	//过户费，如果录入不了，可能是券商计算有小的误差，此时只得手工录入了
 	if operation=="证券买入" || operation=="证券卖出" {
 		//由于过户费的计算中，厘进位到分存在取舍不一的情况，因此只要差距在正负1分钱，均算正常
-		if brokerage!=math.Round(turnover*0.00002*100)/100 {
+		if brokerage!=float32(math.Round(float64(turnover)*0.00002*100)/100) {
 			errors+="过户费可能计算错误，请自查，如确为券商计算问题，请直接将数据插入数据库\n"
 		}
 	} else {
@@ -190,7 +189,34 @@ func create(c *gin.Context) {
 	//增加对余额，也即持仓量的校验，本次成交量与上回余额的和，应与本回余额相同，此项过于复杂，暂不做，只检查
 	if errors!="" {
 		logger.Println("errors: ",errors)
-	} else {
-		logger.Println("表单合法")
+		c.IndentedJSON(http.StatusNotFound, gin.H{"error": errors})
+        return
 	}
+	stock.Amount=amount
+	stock.Code =  code
+	stock.Name = name
+	stock.Operation = operation
+	stock.Volume = volume
+	stock.Balance =  balance
+	stock.Price  = price
+	stock.Turnover=  turnover
+	stock.Amount= amount
+	stock.Brokerage= brokerage 
+	stock.Stamps= stamps
+	stock.TransferFee =  transferFee
+	stock.Date=date
+	statement := `insert into stock(date,code,name,operation,volume,balance,
+		price,turnover,amount,brokerage,stamps,transfer_fee)
+		value (?,?,?,?,?,?,?,?,?,?,?,?)
+	`
+	_, err = Db.Exec(statement,stock.Date,stock.Code,stock.Name,stock.Operation,stock.Volume,stock.Balance,
+		stock.Price,stock.Turnover,stock.Amount,stock.Brokerage,stock.Stamps,stock.TransferFee)
+    if err != nil {
+        errors=fmt.Sprintf("无法创建新记录，错误：%v",err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": errors})
+        return
+    } else {
+        client.Set(nk,"true",2*time.Hour)
+        c.JSON(http.StatusOK, gin.H{"result": "恭喜！成功增加新交易记录"})
+    }
 }
