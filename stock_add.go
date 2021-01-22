@@ -14,14 +14,14 @@ type StockBase struct {
 	Code string  `json:"code" binding:"required"`
 	Name string  `json:"name" binding:"required"`
 	Operation  string `json:"operation" binding:"required"`
-	Volume int  `json:"volume" binding:"required"`
-	Balance     uint  `json:"balance" binding:"required"`
+	Volume int  `json:"volume"`
+	Balance     uint  `json:"balance"`
 	Price float32  `json:"price" binding:"required"`
 	Turnover float32  `json:"turnover" binding:"required"`
 	Amount float32  `json:"amount" binding:"required"`
-	Brokerage float32  `json:"brokerage" binding:"required"`
-	Stamps float32  `json:"stamps" binding:"required"`
-	TransferFee    float32  `json:"transfer_fee" binding:"required"`
+	Brokerage float32  `json:"brokerage"`
+	Stamps float32  `json:"stamps"`
+	TransferFee    float32  `json:"transfer_fee"`
 }
 type Stock struct {
 	Date    time.Time  `json:"date" binding:"required"`
@@ -38,6 +38,7 @@ func create(c *gin.Context) {
 		stockV StockV
 		err error
 		errors string
+		match bool
 	)
 	if err = c.ShouldBindJSON(&stockV); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -66,12 +67,30 @@ func create(c *gin.Context) {
 	brokerage:= stockV.Brokerage
 	stamps:= stockV.Stamps
 	transferFee := stockV.TransferFee
+	//操作类型优先检查，只有6种
+	validOp:=[]string{
+		"证券买入",
+		"证券卖出",
+		"申购中签",
+		"红股入账",
+		"股息入账",
+		"股息红利税补",
+		"配股缴款",
+	}
+	for _,vo:=range validOp {
+		if operation==vo {
+			match=true
+		}
+	}
+	if !match {
+		errors+="不合法的操作类型\n"
+	}
 	//从日期开始校验全部字段，以及业务逻辑的一致性，确保即便前端被绕过，也不会出问题
 	first:=time.Date(2007,10,24,0,0,0,0,time.Local)
 	if date.Before(first) || date.After(time.Now()) {
 		errors+="交易日期必须在2007年10月24日与今天之间\n"
 	}
-	if match, _ := regexp.MatchString(`(6|0|3|1)\d{5}`, code); !match {
+	if match, _ = regexp.MatchString(`(6|0|3|1)\d{5}`, code); !match {
 		errors+="股票代码必须为6位数字，且以6/0/3/1之一开头\n"
 	}
 	if len(name)<7 && (len(name)-utf8.RuneCountInString(name)>=4) {
@@ -87,7 +106,7 @@ func create(c *gin.Context) {
 		if !(volume<0 && volume>-10000) {
 			errors+="卖出时数量必须为负\n"
 		}
-	case "申购中签":
+	case "申购中签","配股缴款":
 		if strings.HasPrefix(code,"6") {
 			if !(volume>0 && volume<10000 && volume % 1000 ==0) {
 				errors+="沪市申购1000股一个签位\n"
@@ -95,6 +114,10 @@ func create(c *gin.Context) {
 		} else if strings.HasPrefix(code,"0") || strings.HasPrefix(code,"3") {
 			if !(volume>0 && volume<10000 && volume % 500 ==0) {
 				errors+="深市申购500股一个签位\n"
+			}
+		} else if strings.HasPrefix(code,"1") {
+			if !(volume>0 && volume<10000 && volume % 10 ==0) {
+				errors+="可转债申购10股一个签位\n"
 			}
 		}
 	case "红股入账":
@@ -108,7 +131,7 @@ func create(c *gin.Context) {
 	}
 	//成交金额部分：如果为买卖，则成交金额为成交均价乘以成交数量的积的绝对值
 	switch operation {
-	case "证券买入","证券卖出","申购中签":
+	case "证券买入","证券卖出","申购中签","配股缴款":
 		if turnover!=float32(math.Abs(float64(price)*float64(volume))) {
 			errors+="成交金额计算错误，请自查\n"
 		}
@@ -122,23 +145,24 @@ func create(c *gin.Context) {
 		}
 	}
 	//佣金计算
-	if operation=="证券买入" || operation=="证券卖出" {
+	match, _ = regexp.MatchString(`(6|0|3)\d{5}`, code)
+	if match && strings.HasPrefix(operation,"证券") {
 		if brokerage!=float32(math.Max(math.Round(float64(turnover)*0.00025*100)/100,5)) {
 			errors+="佣金计算错误，请自查\n"
 		}
-	} else {
-		if brokerage!=0 {
-			errors+="佣金必须为0\n"
+	} else if strings.HasPrefix(code,"1") && operation=="证券卖出" {
+		if brokerage==0 {
+			errors+="可转债卖出佣金无法依规律计算出准确值，但必须不为0\n"
 		}
 	}
 	//印花税计算
-	if operation=="证券卖出" {
+	if match && operation=="证券卖出" {
 		if stamps!=float32(math.Round(float64(turnover)/1000*100)/100) {
 			errors+="印花税计算错误，请自查\n"
 		}
 	} else {
 		if stamps!=0 {
-			errors+="非卖出股票不收印花税\n"
+			errors+="非卖出股票，以及全部可转债交易，不收印花税\n"
 		}
 	}
 	//发生金额计算
@@ -168,25 +192,28 @@ func create(c *gin.Context) {
 			errors+="申购及税补时发生金额为成交金额取负\n"
 		}
 	case "红股入账","股息入账":
-	//default:
 		if amount!=turnover {
 			errors+="送红股及发股息时，发生金额与成交金额必定相同\n"
 		}
-	default:
-		errors+="不合法的操作类型\n"
 	}
 	//过户费，如果录入不了，可能是券商计算有小的误差，此时只得手工录入了
-	if operation=="证券买入" || operation=="证券卖出" {
+	if match && strings.HasPrefix(operation,"证券") {
 		//由于过户费的计算中，厘进位到分存在取舍不一的情况，因此只要差距在正负1分钱，均算正常
-		if brokerage!=float32(math.Round(float64(turnover)*0.00002*100)/100) {
+		if transferFee!=float32(math.Round(float64(turnover)*0.00002*100)/100) {
 			errors+="过户费可能计算错误，请自查，如确为券商计算问题，请直接将数据插入数据库\n"
 		}
 	} else {
-		if brokerage!=0 {
+		if transferFee!=0 {
 			errors+="过户费必须为0\n"
 		}
 	}
-	//增加对余额，也即持仓量的校验，本次成交量与上回余额的和，应与本回余额相同，此项过于复杂，暂不做，只检查
+	//增加对余额，也即持仓量的校验，本次成交量与上回余额的和，应与本回余额相同
+	chkSql:=`select balance from stock where code=? order by date desc limit 1`
+	var lastBal int
+	Db.QueryRow(chkSql,code).Scan(&lastBal)
+	if int(balance)!=int(lastBal)+volume {
+		errors+="最近持仓量与本次成交量的和，必须与本次交易后持仓量相同！\n"
+	}
 	if errors!="" {
 		logger.Println("errors: ",errors)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": errors})
