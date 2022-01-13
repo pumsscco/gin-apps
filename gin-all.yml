@@ -1,0 +1,104 @@
+---
+#第一步，先创建gin专用pv
+#+里面放只放应用日志
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gin-pv
+  labels:
+    app: gin
+spec:
+  capacity:
+    storage: 300Mi
+  accessModes:
+  - ReadWriteOnce
+  - ReadOnlyMany
+  #persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: 192.168.30.218
+    path: /data/pv/cpluto/gin
+---
+#第二步，再创建专用pvc
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gin-all
+  namespace: cpluto
+spec:
+  resources:
+    requests:
+      storage: 300Mi
+  selector:
+    matchLabels:
+      app: gin
+  accessModes:
+  - ReadWriteOnce
+---
+#第三步，创建普通应用的部署集
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gin
+  namespace: cpluto
+  labels:
+    app: gin
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: gin
+  template:
+    metadata:
+      labels:
+        app: gin
+    spec:
+      containers:
+      - name: gin
+        image: harbor.ceibsonline.cn:5000/cpluto/gin:1.7.5
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 150m
+            memory: 150Mi
+        livenessProbe:
+          tcpSocket:
+            port: 5575
+        readinessProbe:
+          tcpSocket:
+            port: 5575
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        ports:
+        - containerPort: 5575
+        volumeMounts:
+        - mountPath: "/app/logs"
+          name: gin
+          subPathExpr: $(POD_NAME)
+      imagePullSecrets:
+      - name: ceibsonline
+      volumes:
+      - name: gin
+        persistentVolumeClaim:
+          claimName: gin-all
+---
+#第四步，创建服务
+apiVersion: v1
+kind: Service
+metadata:
+  name: gin
+  namespace: cpluto
+spec:
+  type: NodePort
+  ports:
+  - port: 5575
+    protocol: TCP
+    targetPort: 5575
+    nodePort: 30075
+  selector:
+    app: gin
