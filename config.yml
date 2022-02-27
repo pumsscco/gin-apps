@@ -1,11 +1,15 @@
 ---
+listen:
+  port: 5575
 mysql:
   db: gin
   host: mysql
   port: 3306
   user: gin
-  pass: '6$R^EQ6NmvN#99pqdgwLFpgP'
+  pass: 4fuWD7w3xELgVFm4VYJr
 redis:
   host: redis
   port: 6379
   pass: pFG64SBbhGB56K8Cv5eZbrdQ
+  db: 1
+logfile: logs/gin.log

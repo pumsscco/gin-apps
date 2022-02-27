@@ -10,8 +10,12 @@ import (
 	"io/ioutil"
     _ "github.com/go-sql-driver/mysql"
     "os"
+    "path/filepath"
 )
 type Conf struct {
+    Listen struct {
+        Port int `yaml:"port"`
+    }
     MySQL struct {
         Db string `yaml:"db"`
         Host string `yaml:"host"`
@@ -22,8 +26,10 @@ type Conf struct {
     Redis struct {
         Host string `yaml:"host"`
         Port int `yaml:"port"`
+        Db int `yaml:"db"`
         Pass string `yaml:"pass"`
     }
+    Logfile string `yaml:"logfile"`
 }
 var (
     Db *sql.DB
@@ -33,13 +39,14 @@ var (
 )
 //所有初始化操作
 func init() {
+    dir,_:=filepath.Abs(filepath.Dir(os.Args[0]))
     //抓全部的配置信息
     yamlBytes, err := ioutil.ReadFile("config.yml")
     if err!=nil {
         log.Fatalf("无法打开环境配置文件: %v",err)
     }
     yaml.Unmarshal(yamlBytes,&cnf)
-    file, err := os.OpenFile("gin.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+    file, err := os.OpenFile(dir+"/"+cnf.Logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
     if err != nil {
         log.Fatalf("无法打开日志文件：%v\n", err)
     }
@@ -47,7 +54,7 @@ func init() {
     client=redis.NewClient(&redis.Options{
         Addr:       fmt.Sprintf("%s:%d",cnf.Redis.Host,cnf.Redis.Port),
         Password:   cnf.Redis.Pass,
-        DB:         0,
+        DB:         cnf.Redis.Db,
     })
     _, err = client.Ping().Result()
     if err!=nil {
@@ -109,5 +116,9 @@ func main() {
 		stock.POST("/clearance", clearance)
 		stock.POST("/position", position)
 	}
+<<<<<<< HEAD
 	router.Run(":5570") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+=======
+	router.Run(fmt.Sprintf(":%d",cnf.Listen.Port))
+>>>>>>> 6b976c40e4ac86c77d774030e050e44fafea06c2
 }
