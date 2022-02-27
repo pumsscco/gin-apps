@@ -52,7 +52,7 @@ func init() {
     _, err = client.Ping().Result()
     if err!=nil {
         logger.Fatalf("redis连接异常：%v\n",err)
-    }    
+    }
     dsn:=fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true", cnf.MySQL.User, cnf.MySQL.Pass, cnf.MySQL.Host, cnf.MySQL.Port, cnf.MySQL.Db)
     //fmt.Println("Data Source Name: ",dsn)
     Db,err=sql.Open("mysql",dsn)
@@ -109,5 +109,5 @@ func main() {
 		stock.POST("/clearance", clearance)
 		stock.POST("/position", position)
 	}
-	router.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	router.Run(":5570") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
