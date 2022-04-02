@@ -116,9 +116,5 @@ func main() {
 		stock.POST("/clearance", clearance)
 		stock.POST("/position", position)
 	}
-<<<<<<< HEAD
-	router.Run(":5570") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
-=======
 	router.Run(fmt.Sprintf(":%d",cnf.Listen.Port))
->>>>>>> 6b976c40e4ac86c77d774030e050e44fafea06c2
 }
