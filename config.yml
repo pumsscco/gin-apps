@@ -6,7 +6,7 @@ mysql:
   host: mysql
   port: 3306
   user: gin
-  pass: 4fuWD7w3xELgVFm4VYJr
+  pass: aCP9gUfPP7rZDd3eJ9FnbCbf
 redis:
   host: redis
   port: 6379
